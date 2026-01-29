@@ -2,14 +2,26 @@ const CACHE_NAME = 'eduflow-v1';
 
 // Hier alle deine HTML-Dateien und Ressourcen eintragen
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/taschenrechner.html',
-  '/Eduflowlogo.png',
-  '/Startbild_Eduflow-2.png',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
-  '/apple-touch-icon.png'
+  '/Eduflow/',
+  '/Eduflow/index.html',
+  '/Eduflow/kalender.html',
+  '/Eduflow/karteien.html',
+  '/Eduflow/karteikarteneditor.html',
+  '/Eduflow/meine-notizen.html',
+  '/Eduflow/mindmapeditor.html',
+  '/Eduflow/mindmaps.html',
+  '/Eduflow/notizen.html',
+  '/Eduflow/pruefungen.html',
+  '/Eduflow/tagebuch.html',
+  '/Eduflow/tagebucheintrage.html',
+  '/Eduflow/timer.html',
+  '/Eduflow/todo.html',
+  '/Eduflow/todos.html',
+  '/Eduflow/Eduflowlogo.png',
+  '/Eduflow/Startbild_Eduflow-2.png',
+  '/Eduflow/icon-192x192.png',
+  '/Eduflow/icon-512x512.png',
+  '/Eduflow/apple-touch-icon.png'
   // Füge hier alle weiteren HTML-Dateien deiner App hinzu:
   // '/timer.html',
   // '/notizen.html',
