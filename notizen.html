@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notizen</title>
+    
+    <!-- Material Icons für Icons -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+</head>
+<body>
+    <!-- Canvas-Elemente -->
+    <canvas id="gridCanvas"></canvas>
+    <canvas id="canvas"></canvas>
+    
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <!-- Zurück-Button -->
+        <button class="back-button" onclick="window.location.href='meine-notizen.html'" title="Zurück zur Übersicht">
+            <i class="material-icons">arrow_back</i>
+        </button>
+        
+        <!-- Werkzeuge -->
+        <div class="tool-group">
+            <button class="stift active" title="Stift">
+                <i class="material-icons">edit</i>
+            </button>
+            <button class="radierer" title="Radierer">
+                <i class="material-icons">auto_fix_high</i>
+            </button>
+        </div>
+        
+        <!-- Raster-Steuerung -->
+        <div class="tool-group grid-controls">
+            <div class="grid-type-selector">
+                <div class="grid-btn active" data-grid="none" title="Keine Hilfslinien">
+                    <i class="material-icons">grid_off</i>
+                </div>
+                <div class="grid-btn" data-grid="lines" title="Liniert">
+                    <i class="material-icons">view_headline</i>
+                </div>
+                <div class="grid-btn" data-grid="squares" title="Kariert">
+                    <i class="material-icons">grid_on</i>
+                </div>
+                <div class="grid-btn" data-grid="dots" title="Punkte">
+                    <i class="material-icons">blur_on</i>
+                </div>
+            </div>
+            <div class="grid-size-control">
+                <input type="range" class="grid-size-slider" id="gridSize" value="20" min="10" max="50">
+                <div class="grid-size-display" id="gridSizeDisplay">20px</div>
+            </div>
+        </div>
+        
+        <!-- Farben -->
+        <div class="tool-group">
+            <div class="clr active" data-clr="#000" style="background:#000"></div>
+            <div class="clr" data-clr="red" style="background:red"></div>
+            <div class="clr" data-clr="orange" style="background:orange"></div>
+            <div class="clr" data-clr="blue" style="background:blue"></div>
+            <div class="clr" data-clr="purple" style="background:purple"></div>
+            <div class="clr" data-clr="yellowgreen" style="background:yellowgreen"></div>
+            <div class="clr" data-clr="yellow" style="background:yellow"></div>
+            <div class="clr" data-clr="#fff" style="background:#fff; border:2px solid #ccc"></div>
+            <input type="color" id="eigeneFarbe" value="#000000" title="Eigene Farbe">
+        </div>
+        
+        <!-- Pinselgröße -->
+        <div class="tool-group">
+            <i class="material-icons" style="color: white; font-size: 18px;">brush</i>
+            <input type="range" id="pinselGroesse" value="5" min="1" max="20">
+            <div class="groesse-anzeige" id="groesseAnzeige">5px</div>
+        </div>
+        
+        <!-- Hintergrundfarbe -->
+        <div class="tool-group">
+            <input type="color" value="#FFFFFF" id="hintergrundFarbe" title="Hintergrundfarbe">
+            <i class="material-icons" style="color: white; font-size: 18px;">format_paint</i>
+        </div>
+        
+        <!-- Undo/Redo (aktuell nicht funktional) -->
+        <!-- <div class="tool-group">
+            <button class="rueckgaengig" id="rueckgaengigBtn" title="Rückgängig">
+                <i class="material-icons">undo</i>
+            </button>
+            <button class="wiederholen" id="wiederholenBtn" title="Wiederholen">
+                <i class="material-icons">redo</i>
+            </button>
+        </div> -->
+        
+        <!-- Aktionen -->
+        <div class="tool-group">
+            <button class="loeschen" title="Leinwand leeren">
+                <i class="material-icons">delete</i>
+                Löschen
+            </button>
+            <button class="speichern" title="Notiz speichern">
+                <i class="material-icons">save</i>
+                Speichern
+            </button>
+        </div>
+        
+        <button class="neues-dokument" title="Neues Dokument">
+            <i class="material-icons">note_add</i>
+            Neu
+        </button>
+    </div>
+    
+    <script>
+    class NotizenApp {
+      constructor() {
+        // Canvas/DOM
+        this.canvas = document.getElementById("canvas");
+        this.ctx = this.canvas.getContext("2d");
+        this.gridCanvas = document.getElementById("gridCanvas");
+        this.gridCtx = this.gridCanvas.getContext("2d");
+        this.body = document.querySelector("body");
+ 
+        // Zeichen-States
+        this.zeichnet = false;
+        this.radiert = false;
+        this.aktuellesWerkzeug = 'stift';
+        this.aktuelleFarbe = '#000';
+        this.aktuelleGroesse = 5;
+        this.letzteX = 0;
+        this.letzteY = 0;
+ 
+        // Raster
+        this.rasterTyp = 'none';
+        this.rasterGroesse = 20;
+        this.rasterFarbe = 'rgba(200, 200, 200, 0.5)';
+ 
+        // Notiz-Daten
+        this.notizName = null;
+        this.striche = [];
+        this.aktuellerStrich = null;
+ 
+        this.initialisieren();
+        this.notizLaden();
+      }
+ 
+      initialisieren() {
+        this.canvasEinrichten();
+        this.eventListenerEinrichten();
+        this.canvasEinstellungenSetzen();
+        this.canvasGroesseAnpassen();
+        this.rasterZeichnen();
+        this.uiAktualisieren();
+      }
+ 
+      notizLaden() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const name = urlParams.get('name');
+        
+        if (name) {
+          this.notizName = name;
+          const gespeichert = localStorage.getItem(`notiz_${name}`);
+          if (gespeichert) {
+            try {
+              const data = JSON.parse(gespeichert);
+              this.striche = data.striche || [];
+              this.rasterTyp = data.rasterTyp || 'none';
+              this.rasterGroesse = data.rasterGroesse || 20;
+              if (data.hintergrundFarbe) this.body.style.backgroundColor = data.hintergrundFarbe;
+              
+              // UI synchronisieren
+              const gs = document.getElementById('gridSize');
+              const gd = document.getElementById('gridSizeDisplay');
+              if (gs && gd) {
+                gs.value = this.rasterGroesse;
+                gd.textContent = this.rasterGroesse + 'px';
+              }
+              
+              document.querySelectorAll('.grid-btn').forEach(btn => btn.classList.remove('active'));
+              const activeGridBtn = document.querySelector(`[data-grid="${this.rasterTyp}"]`);
+              if (activeGridBtn) activeGridBtn.classList.add('active');
+              
+              this.canvasNeuZeichnen();
+              this.rasterZeichnen();
+              this.status(`Notiz "${name}" geladen`, "ok");
+            } catch(e) {
+              console.error(e);
+              this.status("Fehler beim Laden", "error");
+            }
+          }
+        }
+      }
+ 
+      notizSpeichern() {
+        if (!this.notizName) {
+          this.status("Fehler: Kein Notizname vorhanden", "error");
+          return;
+        }
+ 
+        const data = {
+          striche: this.striche,
+          rasterTyp: this.rasterTyp,
+          rasterGroesse: this.rasterGroesse,
+          hintergrundFarbe: this.body.style.backgroundColor || "#ffffff",
+          lastModified: new Date().toISOString()
+        };
+ 
+        localStorage.setItem(`notiz_${this.notizName}`, JSON.stringify(data));
+        this.status("Notiz gespeichert", "ok");
+      }
+ 
+      canvasEinrichten() {
+        this.canvasGroesseAnpassen();
+        window.addEventListener('resize', () => this.canvasGroesseAnpassen());
+      }
+ 
+      canvasGroesseAnpassen() {
+        let bildDaten = null;
+        try {
+          if (this.canvas.width > 0 && this.canvas.height > 0) {
+            bildDaten = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+          }
+        } catch (e) {}
+        
+        this.canvas.width = window.innerWidth;
+        this.canvas.height = window.innerHeight;
+        this.gridCanvas.width = window.innerWidth;
+        this.gridCanvas.height = window.innerHeight;
+        
+        if (bildDaten) {
+          try { this.ctx.putImageData(bildDaten, 0, 0); } catch(e) {}
+        }
+        
+        this.canvasEinstellungenSetzen();
+        this.rasterZeichnen();
+      }
+ 
+      canvasEinstellungenSetzen() {
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.ctx.strokeStyle = this.aktuelleFarbe;
+        this.ctx.lineWidth = this.aktuelleGroesse;
+      }
+ 
+      rasterZeichnen() {
+        this.gridCtx.clearRect(0, 0, this.gridCanvas.width, this.gridCanvas.height);
+        if (this.rasterTyp === 'none') return;
+        
+        this.gridCtx.strokeStyle = this.rasterFarbe;
+        this.gridCtx.lineWidth = 0.5;
+        const breite = this.gridCanvas.width;
+        const hoehe = this.gridCanvas.height;
+        
+        switch (this.rasterTyp) {
+          case 'lines': this.liniertesRasterZeichnen(breite, hoehe); break;
+          case 'squares': this.kariertesRasterZeichnen(breite, hoehe); break;
+          case 'dots': this.punktRasterZeichnen(breite, hoehe); break;
+        }
+      }
+ 
+      liniertesRasterZeichnen(breite, hoehe) {
+        this.gridCtx.beginPath();
+        for (let y = this.rasterGroesse; y < hoehe; y += this.rasterGroesse) {
+          this.gridCtx.moveTo(0, y);
+          this.gridCtx.lineTo(breite, y);
+        }
+        this.gridCtx.stroke();
+      }
+ 
+      kariertesRasterZeichnen(breite, hoehe) {
+        this.gridCtx.beginPath();
+        for (let y = this.rasterGroesse; y < hoehe; y += this.rasterGroesse) {
+          this.gridCtx.moveTo(0, y);
+          this.gridCtx.lineTo(breite, y);
+        }
+        for (let x = this.rasterGroesse; x < breite; x += this.rasterGroesse) {
+          this.gridCtx.moveTo(x, 0);
+          this.gridCtx.lineTo(x, hoehe);
+        }
+        this.gridCtx.stroke();
+      }
+ 
+      punktRasterZeichnen(breite, hoehe) {
+        this.gridCtx.fillStyle = this.rasterFarbe;
+        for (let x = this.rasterGroesse; x < breite; x += this.rasterGroesse) {
+          for (let y = this.rasterGroesse; y < hoehe; y += this.rasterGroesse) {
+            this.gridCtx.beginPath();
+            this.gridCtx.arc(x, y, 1, 0, Math.PI * 2);
+            this.gridCtx.fill();
+          }
+        }
+      }
+ 
+      uiAktualisieren() {
+        document.querySelectorAll('.stift, .radierer').forEach(btn => btn.classList.remove('active'));
+        const stift = document.querySelector('.stift');
+        if (stift) stift.classList.add('active');
+ 
+        document.querySelectorAll('.grid-btn').forEach(btn => btn.classList.remove('active'));
+        const noneBtn = document.querySelector('.grid-btn[data-grid="none"]');
+        if (noneBtn) noneBtn.classList.add('active');
+ 
+        document.querySelectorAll('.clr').forEach(btn => btn.classList.remove('active'));
+        const black = document.querySelector('.clr[data-clr="#000"]');
+        if (black) black.classList.add('active');
+      }
+ 
+      rasterTypSetzen(typ) {
+        this.rasterTyp = typ;
+        this.rasterZeichnen();
+      }
+ 
+      eventListenerEinrichten() {
+        document.querySelector('.stift')?.addEventListener('click', () => this.werkzeugSetzen('stift'));
+        document.querySelector('.radierer')?.addEventListener('click', () => this.werkzeugSetzen('radierer'));
+        document.querySelector('.loeschen')?.addEventListener('click', () => this.canvasLeeren());
+        document.querySelector('.speichern')?.addEventListener('click', () => this.notizSpeichern());
+        document.querySelector('.neues-dokument')?.addEventListener('click', () => this.neuesDokument());
+ 
+        this.canvas.addEventListener('pointerdown', (e) => this.zeichnenStarten(e));
+        this.canvas.addEventListener('pointermove', (e) => this.zeichnen(e));
+        this.canvas.addEventListener('pointerup', () => this.zeichnenStoppen());
+        this.canvas.addEventListener('pointerout', () => this.zeichnenStoppen());
+ 
+        document.querySelectorAll('.grid-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const gridTyp = e.currentTarget.dataset.grid;
+            this.rasterTypSetzen(gridTyp);
+            document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+          });
+        });
+ 
+        const gridSlider = document.getElementById('gridSize');
+        const gridDisplay = document.getElementById('gridSizeDisplay');
+        gridSlider?.addEventListener('input', (e) => {
+          this.rasterGroesse = parseInt(e.target.value, 10);
+          if (gridDisplay) gridDisplay.textContent = this.rasterGroesse + 'px';
+          this.rasterZeichnen();
+        });
+ 
+        document.querySelectorAll('.clr').forEach(farbBtn => {
+          farbBtn.addEventListener('click', (e) => {
+            document.querySelectorAll('.clr').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            this.aktuelleFarbe = e.currentTarget.dataset.clr;
+            if (this.aktuellesWerkzeug === 'stift') this.ctx.strokeStyle = this.aktuelleFarbe;
+          });
+        });
+ 
+        document.getElementById('hintergrundFarbe')?.addEventListener('input', (e) => {
+          this.body.style.backgroundColor = e.target.value;
+          this.rasterZeichnen();
+        });
+ 
+        document.getElementById('eigeneFarbe')?.addEventListener('input', (e) => {
+          this.aktuelleFarbe = e.target.value;
+          document.querySelectorAll('.clr').forEach(b => b.classList.remove('active'));
+          if (this.aktuellesWerkzeug === 'stift') this.ctx.strokeStyle = this.aktuelleFarbe;
+        });
+ 
+        const groesseSlider = document.getElementById('pinselGroesse');
+        const groesseAnzeige = document.getElementById('groesseAnzeige');
+        groesseSlider?.addEventListener('input', (e) => {
+          this.aktuelleGroesse = parseInt(e.target.value, 10);
+          if (groesseAnzeige) groesseAnzeige.textContent = this.aktuelleGroesse + 'px';
+          if (this.aktuellesWerkzeug === 'stift') this.ctx.lineWidth = this.aktuelleGroesse;
+        });
+      }
+ 
+      werkzeugSetzen(werkzeug) {
+        this.aktuellesWerkzeug = werkzeug;
+        this.radiert = werkzeug === 'radierer';
+ 
+        document.querySelectorAll('.stift, .radierer').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`.${werkzeug}`)?.classList.add('active');
+ 
+        if (this.radiert) {
+          this.ctx.globalCompositeOperation = 'destination-out';
+          this.ctx.lineWidth = 30;
+          this.canvas.style.cursor = 'crosshair';
+        } else {
+          this.ctx.globalCompositeOperation = 'source-over';
+          this.ctx.lineWidth = this.aktuelleGroesse;
+          this.ctx.strokeStyle = this.aktuelleFarbe;
+          this.canvas.style.cursor = 'crosshair';
+        }
+      }
+ 
+      _relativePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = (e.clientX ?? e.touches?.[0]?.clientX) - rect.left;
+        const y = (e.clientY ?? e.touches?.[0]?.clientY) - rect.top;
+        return { x, y };
+      }
+ 
+      zeichnenStarten(e) {
+        this.zeichnet = true;
+        const { x, y } = this._relativePos(e);
+        this.letzteX = x;
+        this.letzteY = y;
+ 
+        this.aktuellerStrich = this.neuerStrich();
+        this.aktuellerStrich.punkte.push({ x, y });
+      }
+ 
+      zeichnen(e) {
+        if (!this.zeichnet) return;
+        const { x, y } = this._relativePos(e);
+ 
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.letzteX, this.letzteY);
+        this.ctx.lineTo(x, y);
+        this.ctx.stroke();
+ 
+        this.aktuellerStrich.punkte.push({ x, y });
+        this.letzteX = x;
+        this.letzteY = y;
+      }
+ 
+      zeichnenStoppen() {
+        if (this.zeichnet && this.aktuellerStrich) {
+          this.striche.push(this.aktuellerStrich);
+          this.aktuellerStrich = null;
+        }
+        this.zeichnet = false;
+      }
+ 
+      neuerStrich() {
+        return {
+          id: Date.now() + Math.random(),
+          typ: this.aktuellesWerkzeug,
+          farbe: this.aktuelleFarbe,
+          groesse: this.aktuellesWerkzeug === 'radierer' ? 30 : this.aktuelleGroesse,
+          punkte: []
+        };
+      }
+ 
+      canvasNeuZeichnen() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.striche.forEach(strich => {
+          if (strich.punkte.length < 2) return;
+ 
+          if (strich.typ === 'radierer') {
+            this.ctx.globalCompositeOperation = 'destination-out';
+            this.ctx.lineWidth = strich.groesse;
+          } else {
+            this.ctx.globalCompositeOperation = 'source-over';
+            this.ctx.strokeStyle = strich.farbe;
+            this.ctx.lineWidth = strich.groesse;
+          }
+ 
+          this.ctx.beginPath();
+          this.ctx.moveTo(strich.punkte[0].x, strich.punkte[0].y);
+          for (let i = 1; i < strich.punkte.length; i++) {
+            this.ctx.lineTo(strich.punkte[i].x, strich.punkte[i].y);
+          }
+          this.ctx.stroke();
+        });
+ 
+        this.canvasEinstellungenSetzen();
+      }
+ 
+      canvasLeeren() {
+        if (!confirm("Leinwand wirklich leeren?")) return;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.striche = [];
+      }
+ 
+      neuesDokument() {
+        if (!confirm('Zur Übersicht zurückkehren? Ungespeicherte Änderungen gehen verloren.')) return;
+        window.location.href = 'meine-notizen.html';
+      }
+ 
+      status(msg, type = "info") {
+        console.log(`[${type}] ${msg}`);
+        // Optional: Statusanzeige einbauen
+      }
+    }
+ 
+    document.addEventListener('DOMContentLoaded', () => {
+      new NotizenApp();
+    });
+    </script>
+</body>
+</html>
+ 
+<style>
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+ 
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #ffffff;
+    touch-action: none;
+}
+ 
+/* ============================================
+   CANVAS
+   ============================================ */
+#canvas {
+    display: block;
+    cursor: crosshair;
+    position: absolute;
+    z-index: 1;
+}
+ 
+#gridCanvas {
+    display: block;
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+}
+ 
+/* ============================================
+   TOOLBAR - Moderne Toolbar im App-Design
+   ============================================ */
+.toolbar {
+    width: auto;
+    max-width: 95%;
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: #0c3b99;
+    padding: 15px 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    z-index: 1000;
+}
+ 
+/* ============================================
+   TOOL GROUPS - Gruppen von Werkzeugen
+   ============================================ */
+.tool-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 0 10px;
+    border-right: 2px solid rgba(255,255,255,0.2);
+}
+ 
+.tool-group:last-child {
+    border-right: none;
+}
+ 
+/* ============================================
+   GRID CONTROLS - Raster-Steuerung
+   ============================================ */
+.grid-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    align-items: center;
+}
+ 
+.grid-type-selector {
+    display: flex;
+    gap: 5px;
+}
+ 
+.grid-btn {
+    width: 36px;
+    height: 36px;
+    border: 2px solid white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+ 
+.grid-btn:hover {
+    background: rgba(255,255,255,0.25);
+    transform: scale(1.05);
+}
+ 
+.grid-btn.active {
+    background: #1153cf;
+    border-color: #1153cf;
+    box-shadow: 0 0 10px rgba(17, 83, 207, 0.6);
+}
+ 
+.grid-btn i {
+    font-size: 20px;
+}
+ 
+.grid-size-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+ 
+.grid-size-slider {
+    width: 60px;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    accent-color: #1153cf;
+}
+ 
+.grid-size-display {
+    color: white;
+    font-size: 11px;
+    min-width: 35px;
+    text-align: center;
+    font-weight: 500;
+}
+ 
+/* ============================================
+   COLOR PICKER - Farbauswahl
+   ============================================ */
+.clr {
+    height: 32px;
+    width: 32px;
+    border-radius: 50%;
+    border: 2px solid white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+ 
+.clr:hover {
+    transform: scale(1.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+ 
+.clr.active {
+    transform: scale(1.2);
+    border: 3px solid #1153cf;
+    box-shadow: 0 0 15px rgba(17, 83, 207, 0.8);
+}
+ 
+/* ============================================
+   BUTTONS - Werkzeug-Buttons
+   ============================================ */
+button {
+    border: none;
+    outline: none;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #1153cf 0%, #106cc2 100%);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+ 
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+ 
+button.active {
+    background: linear-gradient(135deg, #0d43a7 0%, #0a3480 100%);
+    box-shadow: 0 0 15px rgba(17, 83, 207, 0.6);
+}
+ 
+button i {
+    font-size: 18px;
+}
+ 
+/* ============================================
+   SPEZIELLE BUTTONS
+   ============================================ */
+.back-button {
+    background: rgba(255,255,255,0.2);
+    padding: 8px;
+    min-width: 40px;
+    justify-content: center;
+}
+ 
+.back-button:hover {
+    background: rgba(255,255,255,0.3);
+}
+ 
+.radierer {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+}
+ 
+.radierer:hover {
+    background: linear-gradient(135deg, #ff5252 0%, #ff3838 100%);
+}
+ 
+.radierer.active {
+    background: linear-gradient(135deg, #ff3838 0%, #ff1f1f 100%);
+    box-shadow: 0 0 15px rgba(255, 82, 82, 0.6);
+}
+ 
+.loeschen {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+ 
+.loeschen:hover {
+    background: linear-gradient(135deg, #f57c00 0%, #e65100 100%);
+}
+ 
+.speichern {
+    background: linear-gradient(135deg, #4caf50 0%, #43a047 100%);
+}
+ 
+.speichern:hover {
+    background: linear-gradient(135deg, #43a047 0%, #388e3c 100%);
+}
+ 
+.neues-dokument {
+    background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+}
+ 
+.neues-dokument:hover {
+    background: linear-gradient(135deg, #7b1fa2 0%, #6a1b9a 100%);
+}
+ 
+/* ============================================
+   INPUT ELEMENTS
+   ============================================ */
+input[type="color"] {
+    width: 36px;
+    height: 32px;
+    border: 2px solid white;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+}
+ 
+input[type="range"] {
+    width: 80px;
+    height: 4px;
+    background: rgba(255,255,255,0.3);
+    outline: none;
+    border-radius: 2px;
+    cursor: pointer;
+    accent-color: #1153cf;
+}
+ 
+.groesse-anzeige {
+    color: white;
+    font-weight: 600;
+    font-size: 12px;
+    min-width: 30px;
+    text-align: center;
+}
+ 
+/* ============================================
+   RESPONSIVE - Mobile Optimierung
+   ============================================ */
+@media (max-width: 768px) {
+    .toolbar {
+        width: 95%;
+        padding: 10px;
+        gap: 6px;
+    }
+ 
+    .tool-group {
+        border-right: none;
+        padding: 4px 6px;
+    }
+ 
+    .clr {
+        height: 28px;
+        width: 28px;
+    }
+ 
+    .grid-btn {
+        width: 32px;
+        height: 32px;
+    }
+ 
+    .grid-btn i {
+        font-size: 18px;
+    }
+}

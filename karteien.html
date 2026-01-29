@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Karteikarten</title>
+
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --white-color: #FFFFFF;
+      --dark-color: #000000;
+      --primary-color: #106cc2;
+      --secondary-color: #1153cf;
+      --background-color: #0c3b99;
+      --background-light: #f0f2f7;
+      --nav-height: 60px;
+
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      --font-size-xxl: 2.3rem;
+
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      
+      --border-radius-s: 8px;
+      --border-radius-m: 30px;
+      --border-radius-circle: 50%;
+
+      --site-max-width: 1300px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background-color: var(--background-light);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      position: fixed;
+      width: 100%;
+      z-index: 5;
+      background: var(--background-color);
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    header .navbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 25px;
+    }
+
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .logo-text {
+      color: var(--white-color);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      font-family: "Poppins", sans-serif;
+    }
+
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-button:hover i {
+      color: #d0d0d0;
+    }
+
+    .back-button .material-icons {
+      font-size: 32px;
+      color: var(--white-color);
+    }
+
+    /* Page Content */
+    .page-content {
+      margin-top: 80px;
+    }
+
+    /* Container */
+    .container {
+      max-width: 500px;
+      margin: 120px auto 40px auto;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h4 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+
+    .card-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .card-input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    .card-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1);
+    }
+
+    .save-button {
+      background-color: #1153cf;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    .save-button:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    /* Karteikarten Liste */
+    .card-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    .card-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f7f8fa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    .card-list li:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    .card-item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+    }
+
+    .card-item-content i {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    .card-name {
+      color: #1153cf;
+      font-weight: 500;
+      flex-grow: 1;
+    }
+
+    .card-count {
+      font-size: 0.85rem;
+      color: #666;
+      background-color: #eee;
+      padding: 4px 12px;
+      border-radius: 12px;
+      margin-right: 10px;
+    }
+
+    .delete-btn {
+      cursor: pointer;
+      color: #e53935;
+      font-size: 22px;
+      background: none;
+      border: none;
+      padding: 0 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    .delete-btn:hover {
+      background: #ffeaea;
+    }
+
+    .delete-btn .material-icons {
+      font-size: 22px;
+    }
+
+    @media (max-width: 768px) {
+      header .navbar {
+        padding: 4px 15px;
+      }
+
+      .logo-text {
+        font-size: 1.4rem;
+      }
+
+      .page-content {
+        margin-top: 100px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 100px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <nav class="navbar">
+      <button class="back-button" onclick="window.location.href='index.html'">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      <div class="nav-logo">
+        <span class="logo-text">Karteikarten</span>
+      </div>
+      <div style="width: 40px;"></div>
+    </nav>
+  </header>
+
+  <main>
+    <div class="page-content">
+      <div class="container">
+        <h4>Neues Karteikarten-Set erstellen</h4>
+        <form class="card-form" onsubmit="event.preventDefault(); addCardSet();">
+          <input
+            type="text"
+            id="setname"
+            placeholder="Name des Sets..."
+            autocomplete="off"
+            class="card-input"
+          />
+          <button type="submit" class="save-button">Anlegen</button>
+        </form>
+
+        <ul class="card-list" id="setlist"></ul>
+      </div>
+    </div>
+  </main>
+
+  <script>
+
+  // ============================================
+  // KONSTANTEN
+  // ============================================
+
+  // localStorage-Key für alle Karteikarten-Sets
+  const storageKey = "flashcard_sets";
+
+  // ============================================
+  // INITIALISIERUNG
+  // ============================================
+
+  // Sobald das DOM geladen ist, Sets anzeigen
+  document.addEventListener("DOMContentLoaded", loadSets);
+
+  // ============================================
+  // HILFSFUNKTION: ANZAHL KARTEN EINES SETS
+  // ============================================
+
+  /**
+   * Gibt zurück, wie viele Karteikarten ein Set enthält
+   * @param {string} setName - Name des Karteikarten-Sets
+   * @returns {number} Anzahl Karten
+   */
+  function getCardCount(setName) {
+    // Karten aus localStorage laden (oder leeres Array)
+    const cards = JSON.parse(localStorage.getItem(`flashcards_${setName}`)) || [];
+    return cards.length;
+  }
+
+  // ============================================
+  // SETS LADEN & ANZEIGEN
+  // ============================================
+
+  /**
+   * Lädt alle Karteikarten-Sets aus localStorage
+   * und rendert sie in der Liste
+   */
+  function loadSets() {
+    // Sets aus localStorage laden
+    let sets = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // Listen-Element holen und leeren
+    const list = document.getElementById("setlist");
+    list.innerHTML = "";
+
+    // ============================================
+    // Für jedes Set einen Listeneintrag erstellen
+    // ============================================
+    sets.forEach(name => {
+      // <li>-Element
+      const li = document.createElement("li");
+
+      // --------------------------------------------
+      // CONTENT: Icon + Name (klickbar)
+      // --------------------------------------------
+      const content = document.createElement("div");
+      content.className = "card-item-content";
+
+      // Klick → Editor öffnen
+      content.onclick = () => {
+        window.location.href = `karteikarteneditor.html?name=${encodeURIComponent(name)}`;
+      };
+
+      // Icon erstellen
+      const icon = document.createElement("i");
+      icon.className = "material-icons";
+      icon.textContent = "style";
+
+      // Name des Sets
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "card-name";
+      nameSpan.textContent = name;
+
+      // Icon + Name zusammenfügen
+      content.appendChild(icon);
+      content.appendChild(nameSpan);
+
+      // --------------------------------------------
+      // ANZAHL KARTEN
+      // --------------------------------------------
+      const count = getCardCount(name);
+
+      const cardCountSpan = document.createElement("span");
+      cardCountSpan.className = "card-count";
+      cardCountSpan.textContent = `${count} Karte${count !== 1 ? 'n' : ''}`;
+
+      // --------------------------------------------
+      // DELETE BUTTON
+      // --------------------------------------------
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "delete-btn";
+      deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
+      deleteBtn.title = "Löschen";
+
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation(); // Verhindert Klick auf das Set
+        deleteSet(name);
+      };
+
+      // Alles ins <li> einsetzen
+      li.appendChild(content);
+      li.appendChild(cardCountSpan);
+      li.appendChild(deleteBtn);
+
+      // <li> zur Liste hinzufügen
+      list.appendChild(li);
+    });
+  }
+
+  // ============================================
+  // NEUES KARTEIKARTEN-SET ERSTELLEN
+  // ============================================
+
+  /**
+   * Erstellt ein neues Karteikarten-Set
+   * und speichert es im localStorage
+   */
+  function addCardSet() {
+    // Input-Feld auslesen
+    const input = document.getElementById("setname");
+    const name = input.value.trim();
+
+    // Abbrechen bei leerem Namen
+    if (!name) return;
+
+    // Bestehende Sets laden
+    let sets = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // Prüfen ob Set bereits existiert
+    if (sets.includes(name)) {
+      alert("Ein Set mit diesem Namen existiert bereits.");
+      return;
+    }
+
+    // Set hinzufügen und speichern
+    sets.push(name);
+    localStorage.setItem(storageKey, JSON.stringify(sets));
+
+    // Input leeren und Liste neu laden
+    input.value = "";
+    loadSets();
+  }
+
+  // ============================================
+  // SET LÖSCHEN (MIT BESTÄTIGUNG)
+  // ============================================
+
+  /**
+   * Löscht ein Karteikarten-Set inklusive aller Karten
+   * @param {string} name - Name des Sets
+   */
+  function deleteSet(name) {
+    // Sicherheitsabfrage
+    if (!confirm(`Möchten Sie das Set "${name}" wirklich löschen? Alle Karteikarten gehen verloren.`)) {
+      return;
+    }
+
+    // Sets aus localStorage laden
+    let sets = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // Set aus Liste entfernen
+    sets = sets.filter(s => s !== name);
+
+    // Aktualisierte Liste speichern
+    localStorage.setItem(storageKey, JSON.stringify(sets));
+
+    // Karten des Sets ebenfalls löschen
+    localStorage.removeItem(`flashcards_${name}`);
+
+    // Liste neu rendern
+    loadSets();
+  }
+</script>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="auth-protect.js"></script>
+</body>
+</html>

@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rechner - EduFlow</title>
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Poppins, sans-serif;
+      background: #f4f4f4;
+      min-height: 100vh;
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      background: #0c3b99;
+      color: white;
+      padding: 15px 25px;
+      box-shadow: 0 3px 10px rgba(0,0,0,.3);
+      text-align: center;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-arrow {
+      position: absolute;
+      left: 25px;
+      font-size: 1.5rem;
+      color: white;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      transition: opacity 0.2s;
+    }
+
+    .back-arrow:hover {
+      opacity: 0.8;
+    }
+
+    header strong {
+      font-size: 1.4rem;
+      letter-spacing: 1px;
+    }
+
+    main {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px 20px 20px;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+
+    .calculator-box {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 10px 40px rgba(0,0,0,.3);
+      position: relative;
+    }
+
+    .history {
+      max-height: 80px;
+      overflow-y: auto;
+      font-size: .85rem;
+      margin-bottom: 15px;
+      color: #666;
+      font-family: 'Courier New', monospace;
+      padding: 8px;
+      background: #f8f9fa;
+      border-radius: 8px;
+    }
+
+    .history::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .history::-webkit-scrollbar-thumb {
+      background: #ccc;
+      border-radius: 3px;
+    }
+
+    .history div {
+      padding: 3px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .history div:last-child {
+      border-bottom: none;
+    }
+
+    .display {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: right;
+      font-family: 'Courier New', monospace;
+      min-height: 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .expression {
+      font-size: 1rem;
+      color: #888;
+      min-height: 24px;
+      word-wrap: break-word;
+    }
+
+    .result {
+      font-size: 2.5rem;
+      color: #3f51b5;
+      font-weight: bold;
+      word-wrap: break-word;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      padding: 18px;
+      font-size: 1.2rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      font-family: Poppins, sans-serif;
+    }
+
+    button:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    }
+
+    button:active {
+      opacity: 0.8;
+    }
+
+    .num { 
+      background: #f1f3f4;
+      color: #333;
+    }
+    
+    .num:hover {
+      background: #e8eaed;
+    }
+
+    .op { 
+      background: #106cc2;
+      color: white;
+    }
+
+    .op:hover {
+      background: #0d5aa8;
+    }
+
+    .fn { 
+      background: #ff9800;
+      color: white;
+    }
+
+    .fn:hover {
+      background: #e68900;
+    }
+
+    .eq { 
+      background: #4caf50;
+      color: white;
+      font-size: 1.5rem;
+    }
+
+    .eq:hover {
+      background: #45a049;
+    }
+
+    .clr { 
+      background: #f44336;
+      color: white;
+    }
+
+    .clr:hover {
+      background: #da190b;
+    }
+
+    @media (max-width: 500px) {
+      .calculator-box {
+        padding: 20px;
+      }
+
+      .result {
+        font-size: 2rem;
+      }
+
+      button {
+        padding: 15px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <a href="index.html" class="back-arrow">←</a>
+  <strong>Taschenrechner</strong>
+</header>
+
+<main>
+  <div class="calculator-box">
+
+    <div class="history" id="history"></div>
+
+    <div class="display">
+      <div class="expression" id="expr"></div>
+      <div class="result" id="result">0</div>
+    </div>
+
+    <div class="buttons">
+      <button class="clr" data-action="clear">C</button>
+      <button class="clr" data-action="back">←</button>
+      <button class="fn" data-action="percent">%</button>
+      <button class="op" data-value="/">÷</button>
+
+      <button class="num" data-value="7">7</button>
+      <button class="num" data-value="8">8</button>
+      <button class="num" data-value="9">9</button>
+      <button class="op" data-value="*">×</button>
+
+      <button class="num" data-value="4">4</button>
+      <button class="num" data-value="5">5</button>
+      <button class="num" data-value="6">6</button>
+      <button class="op" data-value="-">−</button>
+
+      <button class="num" data-value="1">1</button>
+      <button class="num" data-value="2">2</button>
+      <button class="num" data-value="3">3</button>
+      <button class="op" data-value="+">+</button>
+
+      <button class="num" data-value="0" style="grid-column: span 2">0</button>
+      <button class="num" data-value=".">.</button>
+      <button class="eq" data-action="equals">=</button>
+
+      <button class="fn" data-value="(">(</button>
+      <button class="fn" data-value=")">)</button>
+      <button class="fn" data-action="sqrt">√</button>
+      <button class="fn" data-action="square">x²</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  // DOM-Elemente
+  const exprEl = document.getElementById("expr");
+  const resEl = document.getElementById("result");
+  const historyEl = document.getElementById("history");
+
+  // Aktuelle Eingabe
+  let currentExpression = "";
+  let lastResult = null;
+
+  // Event-Listener für alle Buttons
+  document.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const value = btn.dataset.value;
+      const action = btn.dataset.action;
+
+      if (value) {
+        appendValue(value);
+      }
+      
+      if (action) {
+        handleAction(action);
+      }
+    });
+  });
+
+  // Tastatur-Support
+  document.addEventListener("keydown", (e) => {
+    const key = e.key;
+
+    // Zahlen und Operatoren
+    if (/[0-9+\-*/.()]/.test(key)) {
+      e.preventDefault();
+      appendValue(key);
+    }
+
+    // Enter für Berechnung
+    if (key === "Enter") {
+      e.preventDefault();
+      handleAction("equals");
+    }
+
+    // Backspace
+    if (key === "Backspace") {
+      e.preventDefault();
+      handleAction("back");
+    }
+
+    // Escape für Clear
+    if (key === "Escape") {
+      e.preventDefault();
+      handleAction("clear");
+    }
+
+    // Prozent
+    if (key === "%") {
+      e.preventDefault();
+      handleAction("percent");
+    }
+  });
+
+  // Wert zur Expression hinzufügen
+  function appendValue(value) {
+    // Wenn das letzte Ergebnis verwendet werden soll
+    if (lastResult !== null && currentExpression === lastResult.toString()) {
+      // Bei Operatoren das Ergebnis weiterverwenden
+      if (["+", "-", "*", "/"].includes(value)) {
+        currentExpression = lastResult.toString() + value;
+      } else {
+        // Bei Zahlen neu starten
+        currentExpression = value;
+      }
+      lastResult = null;
+    } else {
+      currentExpression += value;
+    }
+
+    updateDisplay();
+  }
+
+  // Aktionen ausführen
+  function handleAction(action) {
+    switch(action) {
+      case "clear":
+        currentExpression = "";
+        lastResult = null;
+        exprEl.textContent = "";
+        resEl.textContent = "0";
+        break;
+
+      case "back":
+        currentExpression = currentExpression.slice(0, -1);
+        updateDisplay();
+        if (!currentExpression) {
+          resEl.textContent = "0";
+        }
+        break;
+
+      case "equals":
+        calculate();
+        break;
+
+      case "sqrt":
+        if (currentExpression) {
+          currentExpression = `Math.sqrt(${currentExpression})`;
+          calculate();
+        }
+        break;
+
+      case "square":
+        if (currentExpression) {
+          currentExpression = `Math.pow(${currentExpression}, 2)`;
+          calculate();
+        }
+        break;
+
+      case "percent":
+        if (currentExpression) {
+          currentExpression = `(${currentExpression}) / 100`;
+          calculate();
+        }
+        break;
+    }
+  }
+
+  // Display aktualisieren
+  function updateDisplay() {
+    exprEl.textContent = currentExpression;
+    resEl.textContent = currentExpression || "0";
+  }
+
+  // Berechnung durchführen
+  function calculate() {
+    if (!currentExpression) return;
+
+    try {
+      // Sichere Evaluierung der Expression
+      const result = evaluateExpression(currentExpression);
+      
+      // Ergebnis runden falls nötig
+      const roundedResult = Math.round(result * 1000000000) / 1000000000;
+
+      // History aktualisieren
+      addToHistory(currentExpression, roundedResult);
+
+      // Display aktualisieren
+      lastResult = roundedResult;
+      currentExpression = roundedResult.toString();
+      exprEl.textContent = "";
+      resEl.textContent = roundedResult;
+
+    } catch (error) {
+      resEl.textContent = "Fehler";
+      setTimeout(() => {
+        currentExpression = "";
+        resEl.textContent = "0";
+        exprEl.textContent = "";
+      }, 1500);
+    }
+  }
+
+  // Sichere Expression-Evaluierung
+  function evaluateExpression(expr) {
+    // Ersetze gefährliche Funktionen
+    const sanitized = expr
+      .replace(/\^/g, "**")
+      .replace(/÷/g, "/")
+      .replace(/×/g, "*");
+
+    // Evaluiere mit Function (sicherer als eval)
+    return Function('"use strict"; return (' + sanitized + ')')();
+  }
+
+  // Zur History hinzufügen
+  function addToHistory(expression, result) {
+    const historyItem = document.createElement("div");
+    
+    // Vereinfache die Anzeige für Math-Funktionen
+    let displayExpr = expression
+      .replace(/Math\.sqrt\(/g, "√(")
+      .replace(/Math\.pow\(/g, "")
+      .replace(/,\s*2\)/g, "²");
+
+    historyItem.textContent = `${displayExpr} = ${result}`;
+    
+    // Am Anfang einfügen
+    historyEl.insertBefore(historyItem, historyEl.firstChild);
+
+    // Maximal 10 Einträge behalten
+    while (historyEl.children.length > 10) {
+      historyEl.removeChild(historyEl.lastChild);
+    }
+  }
+
+  // Initiale Anzeige
+  updateDisplay();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prüfungen</title>
+
+  <!-- ============================================
+       FIREBASE - Backend-Dienste (aktuell nicht aktiv genutzt)
+       ============================================ -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <!-- ============================================
+       FONTS - Google Fonts und Icons
+       ============================================ -->
+  <!-- Material Icons für Zurück-Button -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+  <!-- Poppins (Hauptschrift) und Miniver (dekorative Schrift) -->
+  <link href="https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================
+       CSS VARIABLEN - Globale Design-Tokens
+       ============================================ */
+    :root {
+      /* Farben */
+      --white-color: #ffffff;
+      --primary-color: #1153cf;
+      --secondary-color: #106cc2;
+      --background-light: #f0f2f7;
+      
+      /* Schriftarten */
+      --font-family-main: 'Poppins', sans-serif;
+      --font-family-title: 'Miniver', cursive;
+
+      /* Schriftgrößen */
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      --font-size-xxl: 2.3rem;
+
+      /* Schriftgewichte */
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+  
+      /* Border Radius Werte */
+      --border-radius-s: 8px;
+      --border-radius-m: 30px;
+      --border-radius-circle: 50%;
+
+      /* Maximale Seitenbreite */
+      --site-max-width: 1300px;
+    }
+
+    /* ============================================
+       GLOBAL RESET - Basis-Styling
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* Padding/Border in width einrechnen */
+      font-family: var(--font-family-main);
+    }
+
+    /* Body Grundstil */
+    body {
+      background-color: var(--background-light);
+      min-height: 100vh; /* Mindestens Vollbild-Höhe */
+      padding-top: 80px; /* Platz für fixierten Header */
+    }
+    
+    /* ============================================
+       HEADER - Fixierte Navigation oben
+       ============================================ */
+    header {
+      position: fixed; /* Bleibt beim Scrollen oben */
+      width: 100%;
+      z-index: 5; /* Liegt über anderen Elementen */
+      background: #0c3b99; /* Dunkelblaue Farbe */
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Navbar Container */
+    header .navbar {
+      display: flex;
+      align-items: center;
+      padding: 15px 25px;
+      justify-content: space-between; /* Platz zwischen Links, Mitte, Rechts */
+    }
+
+    /* Logo-Text im Header */
+    .navbar .nav-logo .logo-text {
+      color: #ffffff;
+      font-size: 2rem;
+      font-weight: 600;
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Zurück-Button (Pfeil nach links) */
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Hover-Effekt für Zurück-Button */
+    .back-button:hover i {
+      color: #d0d0d0; /* Wird heller grau */
+    }
+
+    /* ============================================
+       TERMINE WRAPPER - Hauptcontainer
+       ============================================ */
+    .termine-wrapper {
+      max-width: 900px; /* Maximale Breite */
+      margin: 120px auto 40px auto; /* Zentriert mit Abstand oben/unten */
+      padding: 2rem;
+      background: #fff; /* Weißer Hintergrund */
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Schatten für Tiefe */
+    }
+
+    /* ============================================
+       ÜBERSCHRIFT
+       ============================================ */
+    h2 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      font-family: var(--font-family-main);
+      font-weight: 600;
+    }
+
+    /* ============================================
+       FILTER SECTION - Kategorie-Auswahl
+       ============================================ */
+    .filter-section {
+      display: flex;
+      flex-wrap: wrap; /* Umbricht auf kleineren Bildschirmen */
+      gap: 1rem; /* Abstand zwischen Chips */
+      justify-content: center;
+      margin-bottom: 2rem;
+      padding: 1rem;
+      background: #f5f5f5; /* Hellgrauer Hintergrund */
+      border-radius: 12px;
+    }
+
+    /* Filter-Chip (einzelne Kategorie-Button) */
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 1.2rem;
+      border-radius: 20px; /* Abgerundete Ecken */
+      cursor: pointer;
+      border: 2px solid transparent; /* Unsichtbarer Rand (wird bei active sichtbar) */
+      transition: all 0.3s ease; /* Sanfte Übergänge */
+      user-select: none; /* Text kann nicht markiert werden */
+      font-weight: 500;
+      min-width: 120px; /* Mindestbreite für einheitliche Größe */
+      justify-content: center;
+    }
+
+    /* Aktiver Filter-Chip (ausgewählte Kategorie) */
+    .filter-chip.active {
+      border-color: currentColor; /* Rand in der Farbe des Chips */
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Schatten */
+      transform: translateY(-1px); /* Leicht angehoben */
+    }
+
+    /* Farben für verschiedene Filter-Typen */
+    .filter-chip.all {
+      background: #e8eaf6; /* Hellblau */
+      color: #3f51b5;
+    }
+
+    .filter-chip.default {
+      background: #e3f2fd; /* Hellblau */
+      color: #1976d2;
+    }
+
+    .filter-chip.wichtig {
+      background: #ffebee; /* Hellrot */
+      color: #d32f2f;
+    }
+
+    .filter-chip.pruefung {
+      background: #e8f5e8; /* Hellgrün */
+      color: #388e3c;
+    }
+
+    .filter-chip.hausaufgaben {
+      background: #fff3e0; /* Hellorange */
+      color: #f57c00;
+    }
+
+    /* ============================================
+       TERMIN ITEMS - Einzelne Termine
+       ============================================ */
+    .termin-item {
+      display: flex;
+      justify-content: space-between; /* Titel links, Datum rechts */
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      position: relative; /* Für "Diese Woche" Badge */
+    }
+
+    /* Termin-Typen mit verschiedenen Farben (linker Rand) */
+    .termin-item.default {
+      border-left: 5px solid #7986cb; /* Blauer Rand */
+      background: #f3f4fb;
+    }
+
+    .termin-item.wichtig {
+      border-left: 5px solid #e53935; /* Roter Rand */
+      background: #ffebee;
+    }
+
+    .termin-item.pruefung {
+      border-left: 5px solid #43a047; /* Grüner Rand */
+      background: #e8f5e8;
+    }
+
+    .termin-item.hausaufgaben {
+      border-left: 5px solid #ff9800; /* Oranger Rand */
+      background: #fff3e0;
+    }
+
+    /* Hover-Effekt für Termin-Items */
+    .termin-item:hover {
+      transform: translateX(5px); /* Bewegt sich leicht nach rechts */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Schatten */
+    }
+
+    /* Termine die diese Woche stattfinden (besondere Hervorhebung) */
+    .termin-item.current-week {
+      border: 2px solid #ff6f00; /* Oranger Rand */
+      box-shadow: 0 4px 16px rgba(255, 111, 0, 0.3); /* Oranger Schatten */
+      background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 111, 0, 0.1) 100%); /* Gradient-Hintergrund */
+    }
+
+    /* "Diese Woche" Badge (oben rechts) */
+    .termin-item.current-week::before {
+      content: "Diese Woche"; /* Text des Badges */
+      position: absolute;
+      top: -8px; /* Über dem Termin */
+      right: 10px;
+      background: #ff6f00; /* Orange */
+      color: white;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+
+    /* ============================================
+       TERMIN CONTENT - Titel und Typ
+       ============================================ */
+    .termin-content {
+      flex: 1; /* Nimmt verfügbaren Platz ein */
+    }
+
+    /* Termin-Titel */
+    .termin-title {
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 0.2rem;
+    }
+
+    /* Termin-Typ (z.B. "Prüfung", "Hausaufgaben") */
+    .termin-type {
+      font-size: 0.85rem;
+      opacity: 0.8; /* Leicht transparent */
+      font-style: italic; /* Kursiv */
+    }
+
+    /* ============================================
+       TERMIN DATE - Datum und Countdown
+       ============================================ */
+    .termin-date {
+      font-size: 0.95rem;
+      color: #555;
+      text-align: right; /* Rechtsbündig */
+    }
+
+    /* "In X Tagen" Text */
+    .termin-date .days-until {
+      font-size: 0.8rem;
+      color: #888;
+      display: block; /* Eigene Zeile */
+      margin-top: 0.2rem;
+    }
+
+    /* Datum-Hervorhebung für Heute */
+    .termin-date.today {
+      color: #d32f2f; /* Rot */
+      font-weight: bold;
+    }
+
+    /* Datum-Hervorhebung für Morgen */
+    .termin-date.tomorrow {
+      color: #ff6f00; /* Orange */
+      font-weight: bold;
+    }
+
+    /* ============================================
+       NO EVENTS - Keine Termine gefunden
+       ============================================ */
+    #no-events {
+      text-align: center;
+      color: #888;
+      font-style: italic;
+      margin-top: 2rem;
+      padding: 2rem;
+      background: #f9f9f9;
+      border-radius: 12px;
+    }
+
+    /* ============================================
+       STATS SECTION - Statistik-Anzeige
+       ============================================ */
+    .stats-section {
+      display: flex;
+      justify-content: center;
+      gap: 2rem; /* Abstand zwischen den Statistiken */
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN - Mobile Ansicht
+       ============================================ */
+    @media (max-width: 600px) {
+      /* Termin-Items werden auf mobilen Geräten vertikal gestapelt */
+      .termin-item {
+        flex-direction: column; /* Titel über Datum statt nebeneinander */
+        align-items: stretch;
+        text-align: center;
+      }
+
+      /* Datum wird zentriert */
+      .termin-date {
+        text-align: center;
+        margin-top: 0.5rem;
+      }
+
+      /* Filter-Chips werden vertikal gestapelt */
+      .filter-section {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       HEADER - Fixierte Navigation
+       ============================================ -->
+  <header>
+    <nav class="navbar">
+      <!-- Zurück-Button zur Startseite -->
+      <button class="back-button" onclick="window.location.href='index.html'">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      
+      <!-- Logo/Titel in der Mitte -->
+      <div class="nav-logo">
+        <span class="logo-text">Termine</span>
+      </div>
+      
+      <!-- Platzhalter für symmetrisches Layout -->
+      <div style="width: 40px;"></div>
+    </nav>
+  </header>
+
+  <!-- ============================================
+       MAIN CONTENT - Termine-Übersicht
+       ============================================ -->
+  <main>
+    <div class="termine-wrapper">
+      <!-- Überschrift -->
+      <h2>Alle Termine</h2>
+      
+      <!-- ============================================
+           STATISTIK - Anzahl Termine
+           ============================================ -->
+      <div class="stats-section">
+        <!-- Gesamtanzahl aller Termine - wird per JavaScript gefüllt -->
+        <span id="total-count">0 Termine</span>
+        <!-- Anzahl Termine diese Woche - wird per JavaScript gefüllt -->
+        <span id="current-week-count">0 diese Woche</span>
+      </div>
+
+      <!-- ============================================
+           FILTER - Kategorie-Auswahl
+           ============================================ -->
+      <div class="filter-section">
+        <!-- "Alle" Filter - zeigt alle Termine -->
+        <div class="filter-chip all active" onclick="setFilter('all')">
+          <span>Alle</span>
+        </div>
+        
+        <!-- "Standard" Filter -->
+        <div class="filter-chip default" onclick="setFilter('default')">
+          <span>Standard</span>
+        </div>
+        
+        <!-- "Wichtig" Filter -->
+        <div class="filter-chip wichtig" onclick="setFilter('wichtig')">
+          <span>Wichtig</span>
+        </div>
+        
+        <!-- "Prüfungen" Filter -->
+        <div class="filter-chip pruefung" onclick="setFilter('pruefung')">
+          <span>Prüfungen</span>
+        </div>
+        
+        <!-- "Hausaufgaben" Filter -->
+        <div class="filter-chip hausaufgaben" onclick="setFilter('hausaufgaben')">
+          <span>Hausaufgaben</span>
+        </div>
+      </div>
+
+      <!-- Container für die Termin-Liste - wird per JavaScript gefüllt -->
+      <div id="termine-container"></div>
+      
+      <!-- Wird angezeigt wenn keine Termine gefunden wurden -->
+      <div id="no-events" style="display: none;">
+        Keine Termine in der ausgewählten Kategorie gefunden.
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // ============================================
+    // FIREBASE KONFIGURATION
+    // ============================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcp47sENBIrAkQrnsQPiGZ9SOtympZwik",
+      authDomain: "eduflow-d032e.firebaseapp.com",
+      projectId: "eduflow-d032e",
+      storageBucket: "eduflow-d032e.appspot.com",
+      messagingSenderId: "431287771673",
+      appId: "1:431287771673:web:3c211b524455bdd3bc4088"
+    };
+
+    // Firebase initialisieren (falls noch nicht initialisiert)
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // ============================================
+    // VARIABLEN - Zustand der Anwendung
+    // ============================================
+    
+    // Aktuell ausgewählter Filter (Standard: 'all' zeigt alle Termine)
+    let currentFilter = 'all';
+    
+    // Übersetzungen für Event-Typen (für Anzeige)
+    const typeLabels = {
+      'default': 'Standard',
+      'wichtig': 'Wichtig',
+      'pruefung': 'Prüfung',
+      'hausaufgaben': 'Hausaufgaben'
+    };
+
+    // ============================================
+    // HILFSFUNKTIONEN - Datum formatieren
+    // ============================================
+    
+    /**
+     * Formatiert ein Date-Objekt in deutsches Format
+     * @param {Date} date - Datum zum Formatieren
+     * @returns {string} - Formatiertes Datum (z.B. "24.01.2025")
+     */
+    function formatDate(date) {
+      const d = date.getDate().toString().padStart(2, '0'); // Tag mit führender Null
+      const m = (date.getMonth() + 1).toString().padStart(2, '0'); // Monat mit führender Null
+      const y = date.getFullYear(); // Jahr
+      return `${d}.${m}.${y}`;
+    }
+
+    /**
+     * Berechnet die Tage bis zu einem Datum
+     * @param {Date} date - Zieldatum
+     * @returns {string|null} - Text wie "Heute", "Morgen" oder "in X Tagen"
+     */
+    function getDaysUntil(date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Uhrzeit auf Mitternacht setzen
+      date.setHours(0, 0, 0, 0);
+      
+      // Zeitdifferenz in Millisekunden
+      const diffTime = date.getTime() - today.getTime();
+      // In Tage umrechnen
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) return 'Heute';
+      if (diffDays === 1) return 'Morgen';
+      if (diffDays > 1) return `in ${diffDays} Tagen`;
+      return null; // Vergangene Termine (werden nicht angezeigt)
+    }
+
+    /**
+     * Prüft ob ein Datum in der aktuellen Woche liegt
+     * @param {Date} date - Zu prüfendes Datum
+     * @returns {boolean} - true wenn diese Woche, sonst false
+     */
+    function isCurrentWeek(date) {
+      const today = new Date();
+      
+      // Wochenanfang berechnen (Montag)
+      const startOfWeek = new Date(today);
+      startOfWeek.setDate(today.getDate() - today.getDay() + 1); // +1 weil Sonntag=0
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      // Wochenende berechnen (Sonntag)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // 6 Tage später
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      // Prüfen ob Datum zwischen Start und Ende liegt
+      return date >= startOfWeek && date <= endOfWeek;
+    }
+
+    // ============================================
+    // DATEN LADEN - Events aus localStorage
+    // ============================================
+    
+    /**
+     * Lädt alle Events aus localStorage
+     * @returns {Array} - Array mit allen zukünftigen Events
+     */
+    function loadAllEvents() {
+      const events = []; // Leeres Array für Events
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Durch alle localStorage Keys iterieren
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        
+        // Nur Keys im Format "YYYY-MM-DD" verarbeiten (Datum-Keys)
+        if (/^\d{4}-\d{2}-\d{2}$/.test(key)) {
+          // Events für dieses Datum laden
+          const eventList = JSON.parse(localStorage.getItem(key)) || [];
+          
+          // Jedes Event verarbeiten
+          eventList.forEach(ev => {
+            const eventDate = new Date(key); // Datum aus Key erstellen
+            
+            // Nur zukünftige oder heutige Events anzeigen
+            if (eventDate >= today) {
+              events.push({
+                title: ev.title,
+                type: ev.type || 'default', // Falls kein Typ, dann 'default'
+                dateKey: key,
+                date: eventDate,
+              });
+            }
+          });
+        }
+      }
+      
+      return events;
+    }
+
+    // ============================================
+    // FILTER SETZEN - Kategorie-Auswahl
+    // ============================================
+    
+    /**
+     * Setzt den aktiven Filter und rendert die Termine neu
+     * @param {string} filter - Der zu setzende Filter ('all', 'wichtig', etc.)
+     */
+    function setFilter(filter) {
+      currentFilter = filter; // Filter speichern
+      
+      // Alle Filter-Chips deaktivieren
+      document.querySelectorAll('.filter-chip').forEach(chip => chip.classList.remove('active'));
+      
+      // Ausgewählten Filter aktivieren
+      if (filter === 'all') {
+        document.querySelector('.filter-chip.all').classList.add('active');
+      } else {
+        document.querySelector(`.filter-chip.${filter}`).classList.add('active');
+      }
+      
+      // Termine neu rendern mit neuem Filter
+      renderEvents();
+    }
+
+    // ============================================
+    // TERMINE RENDERN - Hauptfunktion
+    // ============================================
+    
+    /**
+     * Rendert alle Termine basierend auf dem aktuellen Filter
+     */
+    function renderEvents() {
+      const container = document.getElementById('termine-container');
+      container.innerHTML = ''; // Container leeren
+      
+      let events = loadAllEvents(); // Alle Events laden
+
+      // Filter anwenden (falls nicht 'all')
+      if (currentFilter !== 'all') {
+        events = events.filter(event => event.type === currentFilter);
+      }
+
+      // ============================================
+      // STATISTIK BERECHNEN
+      // ============================================
+      
+      // Gesamtanzahl aller Termine (ohne Filter)
+      const totalEvents = loadAllEvents();
+      // Termine diese Woche (ohne Filter)
+      const currentWeekEvents = totalEvents.filter(event => isCurrentWeek(event.date));
+
+      // Statistik-Anzeige aktualisieren
+      document.getElementById('total-count').textContent = `${totalEvents.length} Termine`;
+      document.getElementById('current-week-count').textContent = `${currentWeekEvents.length} diese Woche`;
+
+      // ============================================
+      // KEINE TERMINE - Meldung anzeigen
+      // ============================================
+      
+      if (events.length === 0) {
+        document.getElementById('no-events').style.display = 'block';
+        return; // Funktion beenden
+      } else {
+        document.getElementById('no-events').style.display = 'none';
+      }
+
+      // ============================================
+      // TERMINE SORTIEREN - Nach Datum aufsteigend
+      // ============================================
+      
+      events.sort((a, b) => a.date - b.date); // Frühere Termine zuerst
+
+      // ============================================
+      // TERMINE ANZEIGEN - DOM-Elemente erstellen
+      // ============================================
+      
+      events.forEach(event => {
+        // Container für einzelnen Termin
+        const eventEl = document.createElement('div');
+        eventEl.className = `termin-item ${event.type}`; // CSS-Klasse je nach Typ
+        
+        // "Diese Woche" Klasse hinzufügen falls zutreffend
+        if (isCurrentWeek(event.date)) eventEl.classList.add('current-week');
+
+        // ============================================
+        // TERMIN CONTENT - Titel und Typ
+        // ============================================
+        
+        const contentEl = document.createElement('div');
+        contentEl.className = 'termin-content';
+        contentEl.innerHTML = `
+          <div class="termin-title">${event.title}</div>
+          <div class="termin-type">${typeLabels[event.type] || 'Standard'}</div>
+        `;
+
+        // ============================================
+        // TERMIN DATUM - Datum und Countdown
+        // ============================================
+        
+        const dateEl = document.createElement('div');
+        dateEl.className = 'termin-date';
+        
+        // Countdown berechnen
+        const daysUntil = getDaysUntil(new Date(event.date));
+        
+        // CSS-Klasse für Heute/Morgen
+        if (daysUntil === 'Heute') dateEl.classList.add('today');
+        else if (daysUntil === 'Morgen') dateEl.classList.add('tomorrow');
+        
+        // HTML für Datum und Countdown
+        dateEl.innerHTML = `
+          <div>${formatDate(event.date)}</div>
+          <div class="days-until">${daysUntil}</div>
+        `;
+
+        // Elemente zusammenfügen und zum Container hinzufügen
+        eventEl.appendChild(contentEl);
+        eventEl.appendChild(dateEl);
+        container.appendChild(eventEl);
+      });
+    }
+
+    // ============================================
+    // INITIALISIERUNG - Beim Laden der Seite
+    // ============================================
+    
+    // Termine sofort beim Laden anzeigen
+    renderEvents();
+  </script>
+
+  <!-- Auth-Protection Script (falls vorhanden) -->
+  <script src="auth-protect.js"></script>
+</body>
+</html>

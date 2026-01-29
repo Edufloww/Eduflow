@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Mindmap Editor Pro</title>
+
+<!-- Google Material Icons für moderne Icon-Darstellung -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+<style>
+
+/* ===========================
+   GRUNDLEGENDES BODY STYLING
+   =========================== */
+body {
+margin: 0;
+font-family: "Poppins", sans-serif;
+padding-top: 80px; /* Platz für den fixierten Header */
+    }
+
+/* ===========================
+   HEADER / NAVIGATION
+   =========================== */
+/* Fixierter Header, bleibt beim Scrollen oben sichtbar */
+header {
+position: fixed;
+width: 100%;
+z-index: 5; /* Über Canvas und Nodes */
+background: #0c3b99;
+top: 0;
+left: 0;
+box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+/* Flexbox-Layout für Navigation */
+header .navbar {
+display: flex;
+align-items: center;
+padding: 15px 25px;
+justify-content: space-between; /* Zurück-Button links, Spacer rechts */
+    }
+
+.navbar .nav-logo .logo-text {
+color: #ffffff;
+font-size: 2rem;
+font-weight: 600;
+font-family: "Poppins", sans-serif;
+    }
+
+/* Zurück-Button zur Mindmap-Übersicht */
+.back-button {
+background: none;
+border: none;
+color: white;
+font-size: 28px;
+cursor: pointer;
+display: flex;
+align-items: center;
+gap: 10px;
+    }
+
+.back-button:hover i {
+color: #d0d0d0; /* Leichter Hover-Effekt */
+    }
+
+/* ===========================
+   TOOLBAR (Werkzeugleiste)
+   =========================== */
+/* Toolbar enthält alle Werkzeuge: Node hinzufügen, Verbinden, Farben, Formen */
+.toolbar {
+background-color: #e6ecfa;
+padding: 12px;
+display: flex;
+gap: 10px;
+position: relative;
+z-index: 2; /* Über Canvas, aber unter Header */
+flex-wrap: wrap; /* Responsives Layout auf kleinen Bildschirmen */
+    }
+
+/* Basis-Styling für alle Toolbar-Buttons */
+.toolbar button {
+background-color: #0c3b99;
+color: white;
+border: none;
+padding: 10px 15px;
+border-radius: 8px;
+cursor: pointer;
+font-weight: 500;
+transition: background 0.2s ease, transform 0.2s ease;
+position: relative;
+display: flex;
+align-items: center;
+gap: 5px;
+    }
+
+.toolbar button:hover {
+background-color: #1153cf; /* Helleres Blau beim Hover */
+transform: translateY(-2px); /* Leichtes Anheben */
+    }
+
+/* Tooltip beim Hovern über Buttons */
+.toolbar button:hover::after {
+content: attr(data-tooltip); /* Tooltip-Text aus data-Attribut */
+position: absolute;
+bottom: -35px;
+left: 50%;
+transform: translateX(-50%);
+background-color: #333;
+color: #fff;
+padding: 5px 10px;
+border-radius: 4px;
+font-size: 12px;
+white-space: nowrap;
+z-index: 100;
+    }
+
+/* Spezieller Zustand für Verbindungs-Button wenn aktiv */
+.toolbar button.connecting {
+background-color: #ff5722; /* Orange/Rot wenn Verbindungsmodus aktiv */
+    }
+
+/* ===========================
+   FARBAUSWAHL (COLOR PICKER)
+   =========================== */
+.color-picker {
+display: flex;
+gap: 8px;
+background: white;
+padding: 8px;
+border-radius: 8px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+/* Einzelne Farboptionen (kreisförmig) */
+.color-option {
+width: 30px;
+height: 30px;
+border-radius: 50%;
+cursor: pointer;
+border: 2px solid transparent;
+transition: all 0.2s;
+    }
+
+.color-option:hover {
+transform: scale(1.15); /* Vergrößerung beim Hover */
+border-color: #333;
+    }
+
+/* Aktive Farbe wird hervorgehoben */
+.color-option.active {
+border-color: #333;
+border-width: 3px;
+transform: scale(1.1);
+    }
+
+/* ===========================
+   FORMAUSWAHL (SHAPE PICKER)
+   =========================== */
+.shape-picker {
+display: flex;
+gap: 8px;
+background: white;
+padding: 8px;
+border-radius: 8px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+/* Einzelne Form-Optionen */
+.shape-option {
+padding: 8px 12px;
+border: 2px solid #ccc;
+border-radius: 6px;
+cursor: pointer;
+background: white;
+transition: all 0.2s;
+font-size: 14px;
+    }
+
+.shape-option:hover {
+background: #e6ecfa;
+border-color: #0c3b99;
+    }
+
+/* Aktive Form wird hervorgehoben */
+.shape-option.active {
+background: #0c3b99;
+color: white;
+border-color: #0c3b99;
+    }
+
+/* ===========================
+   CANVAS (ZEICHENFLÄCHE)
+   =========================== */
+/* Der Hauptbereich, auf dem die Mindmap erstellt wird */
+#canvas {
+position: relative;
+width: 100vw;
+height: calc(100vh - 192px); /* Volle Höhe minus Header und Toolbar */
+background-color: #f0f0f0; /* Neutraler grauer Hintergrund */
+overflow: hidden; /* Verhindert Scrollen */
+touch-action: none; /* Deaktiviert Standard-Touch-Gesten (wichtig für Drag) */
+    }
+
+/* ===========================
+   MINDMAP-KNOTEN (NODES)
+   =========================== */
+/* Basis-Styling für alle Mindmap-Knoten */
+.node {
+position: absolute; /* Freie Positionierung auf Canvas */
+min-width: 120px;
+min-height: 60px;
+background-color: #ffffff;
+border: 3px solid #0c3b99;
+border-radius: 10px;
+padding: 15px;
+cursor: move; /* Zeigt an, dass Element bewegbar ist */
+resize: both; /* Ermöglicht manuelle Größenanpassung */
+overflow: auto; /* Scrollbar bei zu viel Inhalt */
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+transition: box-shadow 0.2s;
+    }
+
+.node:hover {
+box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); /* Stärkerer Schatten beim Hover */
+    }
+
+/* ===========================
+   VERSCHIEDENE KNOTENFORMEN
+   =========================== */
+/* Kreisförmige Knoten */
+.node.shape-circle {
+border-radius: 50%; /* Perfekter Kreis */
+min-width: 100px;
+min-height: 100px;
+display: flex;
+align-items: center;
+justify-content: center;
+text-align: center;
+    }
+
+/* Wolkenförmige Knoten */
+.node.shape-cloud {
+border-radius: 50% 50% 40% 60%; /* Unregelmäßige Rundung für Wolken-Effekt */
+    }
+
+/* ===========================
+   KNOTEN-INHALT
+   =========================== */
+.node-content {
+position: relative;
+width: 100%;
+height: 100%;
+    }
+
+/* Editierbarer Text innerhalb des Knotens */
+.node-text {
+outline: none; /* Kein Standard-Focus-Outline */
+min-height: 20px;
+word-wrap: break-word; /* Textumbruch bei langen Wörtern */
+color: #0c3b99;
+font-weight: 500;
+width: 100%;
+    }
+
+/* ===========================
+   KNOTEN-ZUSTÄNDE
+   =========================== */
+/* Knoten im Verbindungsmodus */
+.node.connecting-mode {
+cursor: pointer; /* Zeigt an, dass Knoten klickbar ist */
+border-color: #ff5722; /* Orange Border im Verbindungsmodus */
+    }
+
+/* Knoten als Start für neue Verbindung ausgewählt */
+.node.selected-for-connection {
+background-color: #ffeb3b; /* Gelbe Hintergrundfarbe */
+border-color: #ff5722;
+    }
+
+/* Knoten im Kontextmenü ausgewählt */
+.node.selected {
+border-color: #4caf50; /* Grüner Border */
+box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.3); /* Grüner Glow-Effekt */
+    }
+
+/* ===========================
+   KONTEXTMENÜ (RECHTSKLICK-MENÜ)
+   =========================== */
+/* Container für das Kontextmenü */
+.context-menu {
+position: absolute;
+background: white;
+border-radius: 12px;
+box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+padding: 8px;
+z-index: 1000; /* Über allen anderen Elementen */
+display: none; /* Standardmäßig versteckt */
+min-width: 220px;
+    }
+
+/* Sichtbarer Zustand */
+.context-menu.show {
+display: block;
+    }
+
+/* Einzelne Menüeinträge */
+.context-menu-item {
+padding: 10px 15px;
+cursor: pointer;
+border-radius: 6px;
+transition: background 0.2s;
+display: flex;
+align-items: center;
+gap: 10px;
+font-size: 14px;
+    }
+
+.context-menu-item:hover {
+background: #e6ecfa; /* Hellblauer Hover-Effekt */
+    }
+
+/* Trennlinie zwischen Menü-Sektionen */
+.context-menu-divider {
+height: 1px;
+background: #e0e0e0;
+margin: 8px 0;
+    }
+
+/* Sektion innerhalb des Kontextmenüs */
+.context-menu-section {
+padding: 8px 12px;
+    }
+
+/* Label für Menü-Sektionen (z.B. "Farbe", "Form") */
+.context-menu-label {
+font-size: 12px;
+color: #666;
+font-weight: 600;
+margin-bottom: 8px;
+display: flex;
+align-items: center;
+gap: 6px;
+    }
+
+/* ===========================
+   SVG FÜR VERBINDUNGEN
+   =========================== */
+/* SVG-Element für die Linien zwischen Knoten */
+svg {
+position: absolute;
+top: 0;
+left: 0;
+z-index: 0; /* Unter den Knoten */
+pointer-events: none; /* Linien sind nicht klickbar */
+    }
+
+/* Styling für Verbindungslinien */
+svg line {
+stroke: #0c3b99; /* Standardfarbe für Linien */
+stroke-width: 3;
+    }
+
+/* Pfeilspitzen an den Linienenden */
+svg path {
+fill: #0c3b99;
+    }
+
+/* ===========================
+   TOOLBAR-SEKTIONEN
+   =========================== */
+/* Gruppierung von zusammengehörigen Toolbar-Elementen */
+.toolbar-section {
+display: flex;
+gap: 8px;
+align-items: center;
+padding: 0 10px;
+border-right: 2px solid #ccc; /* Trennlinie zwischen Sektionen */
+    }
+
+/* Letzte Sektion hat keine Trennlinie */
+.toolbar-section:last-child {
+border-right: none;
+    }
+
+</style>
+</head>
+<body>
+
+<!-- ===========================
+     HEADER MIT NAVIGATION
+     =========================== -->
+<header>
+<nav class="navbar">
+<!-- Zurück-Button zur Mindmaps-Übersicht -->
+<button class="back-button" onclick="window.location.href='mindmaps.html'">
+<i class="material-icons">arrow_back</i>
+</button>
+
+<!-- Titel (wird per JavaScript mit Mindmap-Namen befüllt) -->
+<div class="nav-logo">
+<span class="logo-text">Mindmap Editor Pro</span>
+</div>
+
+<!-- Spacer für symmetrisches Layout -->
+<div style="width: 40px;"></div>
+</nav>
+</header>
+
+<!-- ===========================
+     TOOLBAR (WERKZEUGLEISTE)
+     =========================== -->
+<div class="toolbar">
+
+<!-- Sektion 1: Knoten & Verbindungen -->
+<div class="toolbar-section">
+<button onclick="addNode()" data-tooltip="Neue Sprechblase erstellen">
+<i class="material-icons">add_circle</i> Node
+</button>
+<button id="connectBtn" onclick="toggleConnection()" data-tooltip="Verbindungsmodus aktivieren">
+<i class="material-icons">arrow_forward</i> Verbinden
+</button>
+</div>
+
+<!-- Sektion 2: Farbauswahl -->
+<div class="toolbar-section">
+<span style="color: #333; font-weight: 600; font-size: 14px;">Farbe:</span>
+<div class="color-picker">
+<div class="color-option active" style="background: #0c3b99;" onclick="setCurrentColor('#0c3b99')"></div>
+<div class="color-option" style="background: #e53935;" onclick="setCurrentColor('#e53935')"></div>
+<div class="color-option" style="background: #43a047;" onclick="setCurrentColor('#43a047')"></div>
+<div class="color-option" style="background: #ff9800;" onclick="setCurrentColor('#ff9800')"></div>
+<div class="color-option" style="background: #9c27b0;" onclick="setCurrentColor('#9c27b0')"></div>
+<div class="color-option" style="background: #00bcd4;" onclick="setCurrentColor('#00bcd4')"></div>
+</div>
+</div>
+
+<!-- Sektion 3: Formauswahl -->
+<div class="toolbar-section">
+<span style="color: #333; font-weight: 600; font-size: 14px;">Form:</span>
+<div class="shape-picker">
+<div class="shape-option active" onclick="setCurrentShape('rectangle')">📦 Box</div>
+<div class="shape-option" onclick="setCurrentShape('circle')">⚪ Kreis</div>
+<div class="shape-option" onclick="setCurrentShape('cloud')">☁️ Wolke</div>
+</div>
+</div>
+
+<!-- Sektion 4: Speichern -->
+<div class="toolbar-section">
+<button onclick="saveMindmap()" data-tooltip="Speichert deine Mindmap">
+<i class="material-icons">save</i> Speichern
+</button>
+</div>
+
+</div>
+
+<!-- ===========================
+     CANVAS (ZEICHENFLÄCHE)
+     =========================== -->
+<div id="canvas">
+<!-- SVG-Element für Verbindungslinien zwischen Knoten -->
+<svg id="lines"></svg>
+</div>
+
+<!-- ===========================
+     KONTEXTMENÜ
+     =========================== -->
+<!-- Wird bei Rechtsklick/Long-Press auf Knoten angezeigt -->
+<div id="contextMenu" class="context-menu">
+
+<!-- Farbauswahl im Kontextmenü -->
+<div class="context-menu-section">
+<div class="context-menu-label">
+<i class="material-icons" style="font-size: 16px;">palette</i> Farbe
+</div>
+<div class="color-picker">
+<div class="color-option" style="background:#0c3b99" onclick="setNodeColor('#0c3b99')"></div>
+<div class="color-option" style="background:#e53935" onclick="setNodeColor('#e53935')"></div>
+<div class="color-option" style="background:#43a047" onclick="setNodeColor('#43a047')"></div>
+<div class="color-option" style="background:#ff9800" onclick="setNodeColor('#ff9800')"></div>
+<div class="color-option" style="background:#9c27b0" onclick="setNodeColor('#9c27b0')"></div>
+<div class="color-option" style="background:#00bcd4" onclick="setNodeColor('#00bcd4')"></div>
+</div>
+</div>
+
+<div class="context-menu-divider"></div>
+
+<!-- Formauswahl im Kontextmenü -->
+<div class="context-menu-section">
+<div class="context-menu-label">
+<i class="material-icons" style="font-size: 16px;">crop_square</i> Form
+</div>
+<div class="shape-picker" style="flex-direction: column; gap: 5px;">
+<div class="shape-option" onclick="setNodeShape('rectangle')" style="width: 100%;">📦 Box</div>
+<div class="shape-option" onclick="setNodeShape('circle')" style="width: 100%;">⚪ Kreis</div>
+<div class="shape-option" onclick="setNodeShape('cloud')" style="width: 100%;">☁️ Wolke</div>
+</div>
+</div>
+
+<div class="context-menu-divider"></div>
+
+<!-- Löschen-Option -->
+<div class="context-menu-item" onclick="deleteSelectedNode()" style="color: #e53935;">
+<i class="material-icons">delete</i> Löschen
+</div>
+
+</div>
+
+<script>
+
+// ===========================
+// GLOBALE VARIABLEN & STATE
+// ===========================
+
+/* URL-Parameter auslesen: Welche Mindmap wird bearbeitet? */
+const urlParams = new URLSearchParams(window.location.search);
+const mapName = urlParams.get("name") || "default";
+
+/* Eindeutiger Zähler für Node-IDs */
+let nodeIdCounter = 0;
+
+/* Aktuell ausgewählter Knoten beim Dragging */
+let selectedNode = null;
+
+/* Start-Knoten für neue Verbindung */
+let connectStart = null;
+
+/* Array aller Verbindungen: [startNodeId, endNodeId, color] */
+let connections = [];
+
+/* Ist der Verbindungsmodus aktiv? */
+let isConnecting = false;
+
+/* Offset-Werte für präzises Dragging */
+let offsetX, offsetY, isDragging = false;
+
+/* Aktuell ausgewählte Farbe und Form für neue Knoten */
+let currentColor = '#0c3b99';
+let currentShape = 'rectangle';
+
+/* Knoten, auf dem Kontextmenü geöffnet wurde */
+let contextMenuNode = null;
+
+/* Timer und Flag für Long-Press-Erkennung auf Touch-Geräten */
+let longPressTimer = null;
+let longPressTriggered = false;
+
+// ===========================
+// INITIALISIERUNG
+// ===========================
+
+/* Wird beim Laden der Seite ausgeführt */
+document.addEventListener("DOMContentLoaded", () => {
+/* Mindmap-Namen in den Header einfügen */
+const titleElement = document.querySelector(".logo-text");
+if (titleElement) {
+titleElement.textContent = mapName;
+      }
+/* Toolbar-Auswahl aktualisieren (aktive Farbe/Form markieren) */
+updateToolbarSelection();
+    });
+
+// ===========================
+// FARB- UND FORMAUSWAHL
+// ===========================
+
+/* Setzt die aktuell ausgewählte Farbe für neue Knoten */
+function setCurrentColor(color) {
+currentColor = color;
+updateToolbarSelection();
+    }
+
+/* Setzt die aktuell ausgewählte Form für neue Knoten */
+function setCurrentShape(shape) {
+currentShape = shape;
+updateToolbarSelection();
+    }
+
+/* Aktualisiert die visuelle Darstellung der Toolbar (markiert aktive Auswahl) */
+function updateToolbarSelection() {
+/* Farben aktualisieren */
+document.querySelectorAll('.toolbar .color-option').forEach(option => {
+const bgColor = option.style.background || option.style.backgroundColor;
+/* RGB in Hex konvertieren für Vergleich */
+if (bgColor === currentColor || rgbToHex(bgColor) === currentColor) {
+option.classList.add('active');
+        } else {
+option.classList.remove('active');
+        }
+      });
+
+/* Formen aktualisieren */
+document.querySelectorAll('.toolbar .shape-option').forEach(option => {
+option.classList.remove('active');
+      });
+
+/* Mapping von Form-Namen zu Indizes */
+const shapes = { 'rectangle': 0, 'circle': 1, 'cloud': 2 };
+const shapeOptions = document.querySelectorAll('.toolbar .shape-option');
+if (shapeOptions[shapes[currentShape]]) {
+shapeOptions[shapes[currentShape]].classList.add('active');
+      }
+    }
+
+/* Hilfsfunktion: Konvertiert RGB-Farben zu Hex-Format */
+function rgbToHex(rgb) {
+if (rgb.startsWith('#')) return rgb;
+const result = rgb.match(/\d+/g);
+if (!result) return rgb;
+return '#' + result.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+    }
+
+// ===========================
+// KNOTEN ERSTELLEN
+// ===========================
+
+/* Erstellt einen neuen Mindmap-Knoten
+ * @param x - X-Position auf Canvas
+ * @param y - Y-Position auf Canvas
+ * @param text - Initialer Text im Knoten
+ * @param color - Farbe des Knotens
+ * @param shape - Form des Knotens (rectangle/circle/cloud)
+ */
+function addNode(x = 150, y = 150, text = "Klicken zum Bearbeiten", color = currentColor, shape = currentShape) {
+/* Knoten-Element erstellen */
+const node = document.createElement("div");
+node.className = `node shape-${shape}`;
+node.style.left = `${x}px`;
+node.style.top = `${y}px`;
+node.style.borderColor = color;
+
+/* Eindeutige ID und Daten-Attribute setzen */
+node.dataset.id = `node-${nodeIdCounter++}`;
+node.dataset.color = color;
+node.dataset.shape = shape;
+
+/* Inhalt-Container erstellen */
+const content = document.createElement("div");
+content.className = "node-content";
+
+/* Editierbares Text-Element */
+const textDiv = document.createElement("div");
+textDiv.className = "node-text";
+textDiv.contentEditable = true; /* Macht Text direkt editierbar */
+textDiv.innerText = text;
+textDiv.style.color = color;
+
+/* DOM-Struktur aufbauen */
+content.appendChild(textDiv);
+node.appendChild(content);
+
+/* Event-Listener für Interaktionen */
+node.addEventListener("mousedown", dragStart);
+node.addEventListener("touchstart", handleTouchStart, { passive: false });
+node.addEventListener("click", handleNodeClick);
+node.addEventListener("contextmenu", showContextMenu); /* Rechtsklick */
+
+/* Knoten zum Canvas hinzufügen */
+document.getElementById("canvas").appendChild(node);
+
+/* Bei Platzhalter-Text: Automatisch selektieren für sofortiges Editieren */
+if (text === "Klicken zum Bearbeiten") {
+setTimeout(() => {
+const range = document.createRange();
+const sel = window.getSelection();
+range.selectNodeContents(textDiv);
+sel.removeAllRanges();
+sel.addRange(range);
+        }, 10);
+      }
+    }
+
+// ===========================
+// KONTEXTMENÜ
+// ===========================
+
+/* Zeigt das Kontextmenü bei Rechtsklick oder Long-Press
+ * @param e - Event-Objekt
+ */
+function showContextMenu(e) {
+e.preventDefault(); /* Verhindert Standard-Kontextmenü des Browsers */
+
+const menu = document.getElementById("contextMenu");
+
+/* Position ermitteln (funktioniert für Touch und Maus) */
+const x = e.pageX || (e.touches && e.touches[0].pageX) || e.clientX;
+const y = e.pageY || (e.touches && e.touches[0].pageY) || e.clientY;
+
+/* Menü positionieren und anzeigen */
+menu.style.left = `${x}px`;
+menu.style.top = `${y}px`;
+menu.classList.add("show");
+
+/* Knoten merken und als ausgewählt markieren */
+contextMenuNode = e.currentTarget;
+document.querySelectorAll(".node").forEach(n => n.classList.remove("selected"));
+contextMenuNode.classList.add("selected");
+    }
+
+/* Schließt Kontextmenü bei Klick außerhalb */
+document.addEventListener("click", (e) => {
+if (!e.target.closest("#contextMenu")) {
+document.getElementById("contextMenu").classList.remove("show");
+      }
+    });
+
+/* Ändert die Farbe des ausgewählten Knotens */
+function setNodeColor(color) {
+if (!contextMenuNode) return;
+
+contextMenuNode.style.borderColor = color;
+contextMenuNode.querySelector(".node-text").style.color = color;
+contextMenuNode.dataset.color = color;
+
+/* Verbindungen neu zeichnen (Farben könnten sich geändert haben) */
+drawConnections();
+
+document.getElementById("contextMenu").classList.remove("show");
+    }
+
+/* Ändert die Form des ausgewählten Knotens */
+function setNodeShape(shape) {
+if (!contextMenuNode) return;
+
+contextMenuNode.className = `node shape-${shape}`;
+
+/* Selected-Status beibehalten */
+if (contextMenuNode.classList.contains("selected")) {
+contextMenuNode.classList.add("selected");
+      }
+
+contextMenuNode.dataset.shape = shape;
+document.getElementById("contextMenu").classList.remove("show");
+    }
+
+/* Löscht den ausgewählten Knoten */
+function deleteSelectedNode() {
+if (!contextMenuNode) return;
+
+const id = contextMenuNode.dataset.id;
+
+/* Knoten entfernen */
+contextMenuNode.remove();
+
+/* Alle Verbindungen zu/von diesem Knoten entfernen */
+connections = connections.filter(([from, to]) => from !== id && to !== id);
+
+/* Verbindungen neu zeichnen */
+drawConnections();
+
+document.getElementById("contextMenu").classList.remove("show");
+    }
+
+// ===========================
+// VERBINDUNGEN ERSTELLEN
+// ===========================
+
+/* Behandelt Klicks auf Knoten im Verbindungsmodus
+ * Logik: Erster Klick = Start, zweiter Klick = Ende (Verbindung erstellt)
+ */
+function handleNodeClick(e) {
+if (!isConnecting) return; /* Nur im Verbindungsmodus aktiv */
+
+e.preventDefault();
+e.stopPropagation();
+
+const node = e.currentTarget;
+
+if (!connectStart) {
+/* Erster Klick: Start-Knoten setzen */
+connectStart = node;
+node.classList.add("selected-for-connection");
+      } else if (connectStart !== node) {
+/* Zweiter Klick: Verbindung erstellen */
+connections.push([connectStart.dataset.id, node.dataset.id, connectStart.dataset.color]);
+drawConnections();
+
+/* Aufräumen */
+connectStart.classList.remove("selected-for-connection");
+connectStart = null;
+
+/* Verbindungsmodus automatisch beenden */
+toggleConnection();
+      }
+    }
+
+/* Schaltet den Verbindungsmodus ein/aus */
+function toggleConnection() {
+isConnecting = !isConnecting;
+const connectBtn = document.getElementById("connectBtn");
+const textDivs = document.querySelectorAll(".node-text");
+
+if (isConnecting) {
+/* Verbindungsmodus AKTIVIEREN */
+connectBtn.classList.add("connecting");
+connectBtn.innerHTML = '<i class="material-icons">close</i> Abbrechen';
+
+/* Alle Knoten in Verbindungs-Modus versetzen */
+document.querySelectorAll(".node").forEach(node => node.classList.add("connecting-mode"));
+
+/* Text-Editing deaktivieren im Verbindungsmodus */
+textDivs.forEach(td => td.contentEditable = false);
+      } else {
+/* Verbindungsmodus DEAKTIVIEREN */
+connectBtn.classList.remove("connecting");
+connectBtn.innerHTML = '<i class="material-icons">arrow_forward</i> Verbinden';
+
+/* Verbindungs-Modus beenden */
+document.querySelectorAll(".node").forEach(node => 
+node.classList.remove("connecting-mode", "selected-for-connection"));
+
+/* Text-Editing wieder aktivieren */
+textDivs.forEach(td => td.contentEditable = true);
+
+/* Aufräumen falls Start-Knoten noch gesetzt */
+if (connectStart) {
+connectStart.classList.remove("selected-for-connection");
+connectStart = null;
+        }
+      }
+    }
+
+// ===========================
+// TOUCH-EREIGNISSE (MOBILE)
+// ===========================
+
+/* Behandelt Touch-Start für Long-Press und Drag auf mobilen Geräten */
+function handleTouchStart(e) {
+/* Bei Text-Bearbeitung oder im Verbindungsmodus: Normal fortfahren */
+if (e.target.classList.contains("node-text") || isConnecting) {
+if (isConnecting) {
+dragStart(e);
+        }
+return;
+      }
+
+const touch = e.touches[0];
+longPressTriggered = false;
+
+/* Long-Press Timer starten (500ms für Kontextmenü) */
+longPressTimer = setTimeout(() => {
+longPressTriggered = true;
+
+/* Kontextmenü anzeigen */
+const fakeEvent = {
+preventDefault: () => {},
+currentTarget: e.currentTarget,
+pageX: touch.pageX,
+pageY: touch.pageY
+        };
+showContextMenu(fakeEvent);
+      }, 500);
+
+/* Drag vorbereiten */
+dragStart(e);
+    }
+
+// ===========================
+// DRAG & DROP FUNKTIONALITÄT
+// ===========================
+
+/* Startet das Dragging eines Knotens */
+function dragStart(e) {
+/* Kein Drag bei Text-Bearbeitung oder im Verbindungsmodus */
+if (e.target.classList.contains("node-text") || isConnecting) return;
+
+e.preventDefault();
+isDragging = true;
+selectedNode = e.currentTarget;
+
+if (e.type === "mousedown") {
+/* Maus-Event: Offset berechnen */
+offsetX = e.clientX - selectedNode.offsetLeft;
+offsetY = e.clientY - selectedNode.offsetTop;
+
+/* Event-Listener für Bewegung und Ende */
+document.addEventListener("mousemove", dragMove);
+document.addEventListener("mouseup", dragEnd);
+      } else if (e.type === "touchstart") {
+/* Touch-Event: Offset berechnen */
+const touch = e.touches[0];
+offsetX = touch.clientX - selectedNode.offsetLeft;
+offsetY = touch.clientY - selectedNode.offsetTop;
+
+/* Event-Listener für Touch-Bewegung und Ende */
+document.addEventListener("touchmove", handleTouchMove, { passive: false });
+document.addEventListener("touchend", handleTouchEnd);
+      }
+    }
+
+/* Behandelt Touch-Bewegung (bricht Long-Press ab) */
+function handleTouchMove(e) {
+/* Long-Press abbrechen wenn sich Finger bewegt */
+if (longPressTimer) {
+clearTimeout(longPressTimer);
+longPressTimer = null;
+      }
+dragMove(e);
+    }
+
+/* Behandelt Touch-Ende (räumt Long-Press Timer auf) */
+function handleTouchEnd(e) {
+if (longPressTimer) {
+clearTimeout(longPressTimer);
+longPressTimer = null;
+      }
+dragEnd();
+    }
+
+/* Bewegt den Knoten während des Draggings */
+function dragMove(e) {
+if (!selectedNode || !isDragging) return;
+
+let clientX, clientY;
+
+/* Koordinaten aus Event extrahieren (Maus oder Touch) */
+if (e.type === "mousemove") {
+clientX = e.clientX;
+clientY = e.clientY;
+      } else if (e.type === "touchmove") {
+clientX = e.touches[0].clientX;
+clientY = e.touches[0].clientY;
+e.preventDefault(); /* Verhindert Scrollen beim Drag */
+      }
+
+/* Knoten-Position aktualisieren */
+selectedNode.style.left = `${clientX - offsetX}px`;
+selectedNode.style.top = `${clientY - offsetY}px`;
+
+/* Verbindungen neu zeichnen (Knoten hat sich bewegt) */
+drawConnections();
+    }
+
+/* Beendet das Dragging */
+function dragEnd() {
+/* Long-Press Timer aufräumen */
+if (longPressTimer) {
+clearTimeout(longPressTimer);
+longPressTimer = null;
+      }
+
+isDragging = false;
+selectedNode = null;
+
+/* Event-Listener entfernen */
+document.removeEventListener("mousemove", dragMove);
+document.removeEventListener("mouseup", dragEnd);
+document.removeEventListener("touchmove", handleTouchMove);
+document.removeEventListener("touchend", handleTouchEnd);
+    }
+
+// ===========================
+// SPEICHERN & LADEN
+// ===========================
+
+/* Speichert die aktuelle Mindmap in localStorage */
+function saveMindmap() {
+/* Alle Knoten mit ihren Daten sammeln */
+const nodes = [...document.querySelectorAll(".node")].map(n => ({
+id: n.dataset.id,
+x: n.offsetLeft,
+y: n.offsetTop,
+text: n.querySelector(".node-text") ? n.querySelector(".node-text").innerText.trim() : "",
+color: n.dataset.color || '#0c3b99',
+shape: n.dataset.shape || 'rectangle'
+      }));
+
+/* Datenstruktur für Speicherung */
+const data = { nodes, connections };
+
+/* In localStorage speichern */
+localStorage.setItem(`mindmap_${mapName}`, JSON.stringify(data));
+
+alert("Mindmap gespeichert! 🎉");
+    }
+
+/* Lädt eine gespeicherte Mindmap aus localStorage */
+function loadMindmap() {
+const raw = localStorage.getItem(`mindmap_${mapName}`);
+if (!raw) return; /* Keine gespeicherten Daten vorhanden */
+
+const { nodes, connections: conns } = JSON.parse(raw);
+
+/* Alle Knoten wiederherstellen */
+nodes.forEach(n => {
+addNode(n.x, n.y, n.text, n.color || '#0c3b99', n.shape || 'rectangle');
+
+/* Original-ID wiederherstellen (wichtig für Verbindungen) */
+const lastNode = document.querySelector(".node:last-child");
+lastNode.dataset.id = n.id;
+      });
+
+/* Verbindungen wiederherstellen */
+connections = conns || [];
+
+/* Verbindungen zeichnen */
+drawConnections();
+    }
+
+// ===========================
+// VERBINDUNGEN ZEICHNEN
+// ===========================
+
+/* Zeichnet alle Verbindungslinien zwischen Knoten neu
+ * Wird aufgerufen wenn: Knoten bewegt, Verbindung erstellt, Farbe geändert
+ */
+function drawConnections() {
+const svg = document.getElementById("lines");
+svg.innerHTML = ""; /* SVG leeren */
+
+const canvas = document.getElementById("canvas");
+
+/* SVG-Größe auf Canvas-Größe setzen */
+svg.setAttribute("width", canvas.offsetWidth);
+svg.setAttribute("height", canvas.offsetHeight);
+
+/* Defs-Element für Pfeilspitzen */
+const defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+
+/* Jede Verbindung zeichnen */
+connections.forEach(([fromId, toId, color], idx) => {
+/* Knoten finden */
+const from = document.querySelector(`[data-id='${fromId}']`);
+const to = document.querySelector(`[data-id='${toId}']`);
+
+if (!from || !to) return; /* Knoten existiert nicht mehr */
+
+/* Farbe ermitteln */
+const lineColor = color || from.dataset.color || '#0c3b99';
+
+/* Mittelpunkte der Knoten berechnen */
+const x1 = from.offsetLeft + from.offsetWidth / 2;
+const y1 = from.offsetTop + from.offsetHeight / 2;
+const x2 = to.offsetLeft + to.offsetWidth / 2;
+const y2 = to.offsetTop + to.offsetHeight / 2;
+
+/* Eindeutige Marker-ID für Pfeilspitze */
+const markerId = `arrow-${idx}`;
+
+/* Pfeilspitze erstellen */
+const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+marker.setAttribute("id", markerId);
+marker.setAttribute("markerWidth", "10");
+marker.setAttribute("markerHeight", "10");
+marker.setAttribute("refX", "6"); /* Positionierung der Pfeilspitze */
+marker.setAttribute("refY", "3");
+marker.setAttribute("orient", "auto"); /* Automatische Rotation */
+marker.setAttribute("markerUnits", "strokeWidth");
+marker.innerHTML = `<path d="M0,0 L0,6 L9,3 z" fill="${lineColor}" />`;
+
+defs.appendChild(marker);
+
+/* Linie erstellen */
+const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+line.setAttribute("x1", x1);
+line.setAttribute("y1", y1);
+line.setAttribute("x2", x2);
+line.setAttribute("y2", y2);
+line.setAttribute("stroke", lineColor);
+line.setAttribute("stroke-width", "3");
+line.setAttribute("marker-end", `url(#${markerId})`); /* Pfeilspitze am Ende */
+
+svg.appendChild(line);
+      });
+
+/* Defs zum SVG hinzufügen */
+svg.appendChild(defs);
+    }
+
+// ===========================
+// SONSTIGE EVENT-LISTENER
+// ===========================
+
+/* Klick auf Canvas (außerhalb von Knoten): Verbindungsmodus beenden */
+document.getElementById("canvas").addEventListener("click", (e) => {
+if (e.target.id === "canvas" && isConnecting) toggleConnection();
+    });
+
+/* Beim Laden der Seite: Gespeicherte Mindmap laden */
+window.onload = loadMindmap;
+
+</script>
+</body>
+</html>

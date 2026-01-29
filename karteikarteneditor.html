@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+
+<html lang="de">
+
+<head>
+
+<meta charset="UTF-8" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>Karteikarten Editor</title>
+
+<!-- Google Material Icons für Icons wie Pfeile, Checkmarks, etc. -->
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+<!-- Poppins Schriftart für modernes Design -->
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+
+<style>
+
+/* ===========================
+   CSS VARIABLEN / DESIGN TOKENS
+   =========================== */
+/* Zentrale Farbdefinitionen und Größen für konsistentes Design */
+:root {
+
+--white-color: #FFFFFF;
+
+--dark-color: #000000;
+
+--primary-color: #106cc2;
+
+--secondary-color: #1153cf;
+
+--background-color: #0c3b99;
+
+--nav-height: 60px;
+
+--font-size-s: 0.9rem;
+
+--font-size-n: 1rem;
+
+--font-size-m: 1.12rem;
+
+--font-size-l: 1.5rem;
+
+--font-size-xl: 2rem;
+
+--font-weight-normal: 400;
+
+--font-weight-medium: 500;  
+
+--font-weight-semibold: 600;
+
+--font-weight-bold: 700;
+
+--border-radius-m: 12px;
+
+    }
+
+/* ===========================
+   GRUNDLEGENDES BODY STYLING
+   =========================== */
+body {
+
+font-family: "Poppins", sans-serif;
+
+background: #f4f4f4; /* Heller, neutraler Hintergrund */
+
+margin: 0;
+
+padding: 0;
+
+    }
+
+/* ===========================
+   HEADER / NAVIGATION
+   =========================== */
+/* Fixierter Header, bleibt beim Scrollen sichtbar */
+header {
+
+position: fixed;
+
+width: 100%;
+
+z-index: 5; /* Über anderen Elementen */
+
+background: var(--background-color);
+
+top: 0;
+
+left: 0;
+
+box-shadow: 0 3px 10px rgba(0,0,0,0.3); /* Schatten für Tiefe */
+
+    }
+
+/* Flexbox-Layout für Navigation mit Space-Between */
+header .navbar {
+
+display: flex;
+
+align-items: center;
+
+justify-content: space-between;
+
+padding: 15px 25px;
+
+    }
+
+/* Logo wird horizontal zentriert durch absolute Positionierung */
+.nav-logo {
+
+position: absolute;
+
+left: 50%;
+
+transform: translateX(-50%); /* Perfekte Zentrierung */
+
+text-align: center;
+
+    }
+
+.navbar .logo-text {
+
+color: var(--white-color);
+
+font-size: var(--font-size-xl);
+
+font-weight: var(--font-weight-semibold);
+
+    }
+
+/* Zurück-Button im Header */
+.back-button {
+
+background: none;
+
+border: none;
+
+color: white;
+
+font-size: 28px;
+
+cursor: pointer;
+
+display: flex;
+
+align-items: center;
+
+gap: 10px;
+
+    }
+
+.back-button:hover i {
+
+color: #d0d0d0; /* Leichter Hover-Effekt */
+
+    }
+
+/* ===========================
+   HAUPTINHALT
+   =========================== */
+/* Container für den gesamten sichtbaren Inhalt unter dem Header */
+.page-content {
+
+padding: 100px 20px 50px; /* Top-Padding wegen fixed Header */
+
+display: flex;
+
+flex-direction: column;
+
+align-items: center;
+
+gap: 20px;
+
+min-height: 100vh;
+
+box-sizing: border-box;
+
+    }
+
+/* ===========================
+   LEGENDE (Kann ich / Muss ich noch lernen)
+   =========================== */
+.legend {
+
+font-size: 0.9rem;
+
+color: #444;
+
+display: flex;
+
+gap: 15px;
+
+user-select: none; /* Verhindert versehentliches Markieren */
+
+    }
+
+.legend span {
+
+display: flex;
+
+align-items: center;
+
+gap: 5px;
+
+font-weight: 600;
+
+    }
+
+/* Farbliche Kennzeichnung der Icons */
+.icon.green { color: #4caf50; } /* Grün für "Kann ich" */
+
+.icon.red { color: #f44336; } /* Rot für "Muss ich noch lernen" */
+
+/* ===========================
+   SET NAME & CARD INDEX
+   =========================== */
+.set-name {
+
+font-size: 1.2rem;
+
+font-weight: 600;
+
+color: #1153cf;
+
+margin-bottom: 10px;
+
+text-align: center;
+
+    }
+
+.card-index {
+
+font-weight: 600;
+
+color: #3f51b5;
+
+    }
+
+/* ===========================
+   KARTEIKARTEN CONTAINER
+   =========================== */
+/* Perspective für 3D-Flip-Effekt */
+.card-container {
+
+position: relative;
+
+width: 320px;
+
+height: 200px;
+
+perspective: 1000px; /* Ermöglicht 3D-Transformation */
+
+    }
+
+/* ===========================
+   KARTEIKARTE
+   =========================== */
+/* Die eigentliche Karte mit Flip-Animation */
+.card {
+
+width: 100%;
+
+height: 100%;
+
+background: #f5f5f5;
+
+border-radius: 10px;
+
+box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+cursor: pointer;
+
+position: relative;
+
+transform-style: preserve-3d; /* Bewahrt 3D-Positionierung der Kinder */
+
+transition: transform 0.6s; /* Smooth Flip Animation */
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+padding: 20px;
+
+box-sizing: border-box;
+
+user-select: none; /* Text nicht markierbar */
+
+    }
+
+/* Gedrehter Zustand der Karte (Rückseite sichtbar) */
+.card.flipped {
+
+transform: rotateY(180deg);
+
+    }
+
+/* ===========================
+   KARTENINHALT (Vorder- & Rückseite)
+   =========================== */
+/* Basis-Styling für beide Seiten der Karte */
+.card-content {
+
+position: absolute;
+
+backface-visibility: hidden; /* Verhindert Durchscheinen der anderen Seite */
+
+font-size: 1.3rem;
+
+text-align: center;
+
+width: 100%;
+
+height: 100%;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+padding: 0 15px;
+
+box-sizing: border-box;
+
+    }
+
+/* Vorderseite: Heller Hintergrund, dunkler Text */
+.card-front {
+
+background: #e3f2fd;
+
+color: #0d47a1;
+
+font-weight: 600;
+
+border-radius: 10px;
+
+    }
+
+/* Rückseite: Dunkler Hintergrund, weißer Text, um 180° gedreht */
+.card-back {
+
+background: #0d47a1;
+
+color: white;
+
+transform: rotateY(180deg); /* Startet gedreht, wird bei Flip sichtbar */
+
+border-radius: 10px;
+
+    }
+
+/* ===========================
+   LÖSCHEN-BUTTON
+   =========================== */
+/* Roter Delete-Button oben rechts auf der Karte */
+.delete-btn {
+
+position: absolute;
+
+top: 8px;
+
+right: 8px;
+
+cursor: pointer;
+
+color: #e53935;
+
+transition: color 0.3s ease;
+
+font-size: 24px;
+
+z-index: 11; /* Über allen anderen Elementen der Karte */
+
+background: rgba(255, 255, 255, 0.9); /* Halbtransparenter weißer Hintergrund */
+
+border-radius: 50%; /* Kreisförmig */
+
+width: 32px;
+
+height: 32px;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+    }
+
+.delete-btn:hover {
+
+color: #b71c1c; /* Dunkleres Rot beim Hover */
+
+background: white;
+
+    }
+
+/* ===========================
+   AKTIONS-BUTTONS (Kann ich / Noch lernen)
+   =========================== */
+/* Container für die beiden Buttons unten auf der Karte */
+.action-buttons {
+
+position: absolute;
+
+bottom: 10px;
+
+width: 100%;
+
+display: flex;
+
+justify-content: space-between;
+
+padding: 0 20px;
+
+box-sizing: border-box;
+
+pointer-events: none; /* Container selbst nicht klickbar */
+
+z-index: 10;
+
+backface-visibility: hidden;
+
+flex-direction: row-reverse; /* Grüner Button rechts, roter links */
+
+    }
+
+/* Styling der einzelnen Action-Buttons */
+.action-buttons button {
+
+background: white;
+
+border: none;
+
+font-size: 2.2rem;
+
+cursor: pointer;
+
+pointer-events: auto; /* Buttons selbst sind klickbar */
+
+border-radius: 50%;
+
+width: 48px;
+
+height: 48px;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+transition: all 0.3s ease;
+
+color: #666;
+
+box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+
+    }
+
+/* Verhindert, dass Icons beim Flip gespiegelt werden */
+.action-buttons button .material-icons {
+
+transform: scaleX(1) !important;
+
+    }
+
+/* Wenn Karte geflippt ist, müssen Buttons auch gedreht werden */
+.card.flipped .action-buttons {
+
+transform: rotateY(180deg);
+
+    }
+
+/* Grüner Button (Kann ich) */
+.action-buttons button.green { 
+
+color: #4caf50;
+
+border: 2px solid #4caf50;
+
+    }
+
+.action-buttons button.green:hover { 
+
+background-color: #4caf50;
+
+color: white;
+
+transform: scale(1.1); /* Leichte Vergrößerung beim Hover */
+
+    }
+
+/* Roter Button (Noch lernen) */
+.action-buttons button.red { 
+
+color: #f44336;
+
+border: 2px solid #f44336;
+
+    }
+
+.action-buttons button.red:hover { 
+
+background-color: #f44336;
+
+color: white;
+
+transform: scale(1.1);
+
+    }
+
+/* ===========================
+   GLÜCKWUNSCH-SCREEN
+   =========================== */
+/* Wird angezeigt, wenn alle Karten gelernt wurden */
+.congratulations {
+
+text-align: center;
+
+padding: 30px;
+
+background: linear-gradient(135deg, #4caf50, #81c784); /* Grüner Gradient */
+
+color: white;
+
+border-radius: 15px;
+
+box-shadow: 0 8px 16px rgba(76,175,80,0.3);
+
+margin: 20px 0;
+
+animation: pulse 2s ease-in-out infinite alternate; /* Pulsierender Effekt */
+
+    }
+
+/* Animation für den Glückwunsch-Screen */
+@keyframes pulse {
+
+      0% { transform: scale(1); }
+
+      100% { transform: scale(1.02); } /* Leichte Vergrößerung */
+
+    }
+
+.congratulations h2 { margin: 0 0 15px; font-size: 2rem; }
+
+.congratulations p { margin: 0 0 20px; font-size: 1.1rem; opacity: 0.9; }
+
+/* Button zum Neustarten */
+.congratulations button {
+
+background: white;
+
+color: #4caf50;
+
+border: none;
+
+padding: 12px 24px;
+
+border-radius: 25px;
+
+font-size: 1rem;
+
+font-weight: 600;
+
+cursor: pointer;
+
+transition: all 0.3s ease;
+
+    }
+
+.congratulations button:hover {
+
+transform: translateY(-2px); /* Schwebt nach oben */
+
+box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+
+    }
+
+/* ===========================
+   INPUT-FELDER (Neue Karte hinzufügen)
+   =========================== */
+.card-input {
+
+padding: 12px 14px;
+
+border-radius: 8px;
+
+border: 2px solid #ccc;
+
+font-size: 15px;
+
+outline: none;
+
+transition: border 0.3s;
+
+background: #fff;
+
+    }
+
+/* Focus-State mit blauem Border */
+.card-input:focus {
+
+border-color: var(--primary-color);
+
+box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1); /* Glow-Effekt */
+
+    }
+
+/* ===========================
+   SPEICHERN-BUTTON
+   =========================== */
+.save-button {
+
+background-color: #1153cf;
+
+color: white;
+
+border: none;
+
+padding: 12px 24px;
+
+border-radius: 8px;
+
+cursor: pointer;
+
+font-weight: 600;
+
+letter-spacing: 0.3px;
+
+transition: background 0.3s, transform 0.2s;
+
+    }
+
+.save-button:hover {
+
+background-color: #106cc2;
+
+transform: translateY(-2px);
+
+    }
+
+/* ===========================
+   FORTSCHRITTSBALKEN
+   =========================== */
+.progress-container {
+
+width: 100%;
+
+max-width: 320px;
+
+background: #e0e0e0; /* Grauer Hintergrund */
+
+border-radius: 10px;
+
+height: 8px;
+
+overflow: hidden;
+
+margin: 10px 0;
+
+    }
+
+/* Der eigentliche Balken (grüner Gradient) */
+.progress-bar {
+
+height: 100%;
+
+background: linear-gradient(90deg, #4caf50, #81c784);
+
+transition: width 0.3s ease; /* Smooth Animation bei Fortschritt */
+
+border-radius: 10px;
+
+    }
+
+/* ===========================
+   SWIPE-ANIMATIONEN
+   =========================== */
+/* Basis-Transition für die Karte */
+.card {
+
+transition: transform 0.3s ease, opacity 0.3s ease;
+
+    }
+
+/* Animation beim Swipen nach rechts (Kann ich) */
+.card.swipe-right {
+
+transform: translateX(400px) rotate(10deg);
+
+opacity: 0;
+
+    }
+
+/* Animation beim Swipen nach links (Noch lernen) */
+.card.swipe-left {
+
+transform: translateX(-400px) rotate(-10deg);
+
+opacity: 0;
+
+    }
+
+/* ===========================
+   SWIPE-OVERLAYS
+   =========================== */
+/* Farbige Overlays während des Swipens */
+.swipe-overlay {
+
+position: absolute;
+
+top: 0;
+
+left: 0;
+
+width: 100%;
+
+height: 100%;
+
+border-radius: 10px;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+opacity: 0; /* Standardmäßig unsichtbar */
+
+pointer-events: none; /* Nicht klickbar */
+
+transition: opacity 0.2s ease;
+
+z-index: 5;
+
+    }
+
+/* Overlay wird sichtbar während des Swipens */
+.swipe-overlay.active {
+
+opacity: 1;
+
+    }
+
+/* Grünes Overlay (Kann ich) */
+.swipe-overlay.green {
+
+background: rgba(76, 175, 80, 0.85);
+
+    }
+
+/* Rotes Overlay (Noch lernen) */
+.swipe-overlay.red {
+
+background: rgba(244, 67, 54, 0.85);
+
+    }
+
+/* Inhalt des Overlays (Icon + Text) */
+.swipe-overlay-content {
+
+display: flex;
+
+flex-direction: column;
+
+align-items: center;
+
+gap: 10px;
+
+color: white;
+
+font-size: 1.5rem;
+
+font-weight: 700;
+
+text-transform: uppercase;
+
+letter-spacing: 2px;
+
+    }
+
+.swipe-overlay-content .material-icons {
+
+font-size: 4rem;
+
+    }
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ===========================
+     HEADER MIT NAVIGATION
+     =========================== -->
+<header>
+
+<nav class="navbar">
+
+<!-- Zurück-Button zur Karteien-Übersicht -->
+
+<button class="back-button" onclick="window.location.href='karteien.html'">
+
+<i class="material-icons">arrow_back</i>
+
+</button>
+
+<!-- Zentrierter Titel (wird per JavaScript befüllt) -->
+
+<div class="nav-logo">
+
+<span class="logo-text">Karteikarten Editor</span>
+
+</div>
+
+<!-- Spacer für symmetrisches Layout -->
+
+<div style="width: 40px;"></div>      
+
+</nav>
+
+</header>
+
+<!-- ===========================
+     HAUPTINHALT
+     =========================== -->
+<main class="page-content">
+
+<!-- Name des Karteikarten-Sets -->
+
+<div class="set-name" id="set-name">Karteikarten Set</div>
+
+<!-- Legende zur Erklärung der Farben -->
+
+<div class="legend">
+
+<span><i class="material-icons icon green">check_circle</i> Kann ich</span>
+
+<span><i class="material-icons icon red">close</i> Muss ich noch lernen</span>
+
+</div>
+
+<!-- Anzeige der aktuellen Kartennummer -->
+
+<div class="card-index" id="card-index">Karte 0 von 0</div>
+
+<!-- Fortschrittsbalken -->
+
+<div class="progress-container" id="progress-container" style="display: none;">
+
+<div class="progress-bar" id="progress-bar"></div>
+
+</div>
+
+<!-- Glückwunsch-Screen (wird nach Abschluss angezeigt) -->
+
+<div id="congratulations" class="congratulations" style="display: none;">
+
+<h2>🎉 Herzlichen Glückwunsch! 🎉</h2>
+
+<p>Du hast alle Karteikarten erfolgreich durchgearbeitet!</p>
+
+<button onclick="restartLearning()">Nochmal von vorne beginnen</button>
+
+</div>
+
+<!-- ===========================
+     KARTEIKARTE
+     =========================== -->
+<div class="card-container" id="card-container">
+
+<div class="card" id="card" onclick="flipCard()">
+
+<!-- Grünes Overlay beim Swipen nach rechts -->
+
+<div class="swipe-overlay green" id="overlay-green">
+
+<div class="swipe-overlay-content">
+
+<i class="material-icons">check_circle</i>
+
+<span>Kann ich</span>
+
+</div>
+
+</div>
+
+<!-- Rotes Overlay beim Swipen nach links -->
+
+<div class="swipe-overlay red" id="overlay-red">
+
+<div class="swipe-overlay-content">
+
+<i class="material-icons">close</i>
+
+<span>Noch lernen</span>
+
+</div>
+
+</div>
+
+<!-- Vorderseite der Karte (Frage) -->
+
+<div class="card-content card-front" id="card-front"></div>
+
+<!-- Rückseite der Karte (Antwort) -->
+
+<div class="card-content card-back" id="card-back"></div>
+
+<!-- Löschen-Button -->
+
+<i class="material-icons delete-btn" id="delete-btn" title="Karte löschen">delete</i>
+
+<!-- Action-Buttons (nur auf Rückseite sichtbar) -->
+
+<div class="action-buttons" id="action-buttons" style="display:none;">
+
+<button class="green" onclick="markKnown(event)" title="Kann ich">
+
+<i class="material-icons">check_circle</i>
+
+</button>
+
+<button class="red" onclick="markUnknown(event)" title="Muss ich noch lernen">
+
+<i class="material-icons">close</i>
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ===========================
+     FORMULAR: NEUE KARTE HINZUFÜGEN
+     =========================== -->
+<form onsubmit="event.preventDefault(); addCard();" style="margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+
+<input
+
+type="text"
+
+id="front-input"
+
+placeholder="Vorderseite"
+
+class="card-input"
+
+autocomplete="off"
+
+style="width: 250px;"
+
+/>
+
+<input
+
+type="text"
+
+id="back-input"
+
+placeholder="Rückseite"
+
+class="card-input"
+
+autocomplete="off"
+
+style="width: 250px;"
+
+/>
+
+<button type="submit" class="save-button" style="height: 48px;">
+
+        Karte hinzufügen
+
+</button>
+
+</form>
+
+</main>
+
+<!-- ===========================
+     FIREBASE & AUTHENTICATION
+     =========================== -->
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<!-- Authentifizierungs-Schutz -->
+<script src="auth-protect.js"></script>
+
+<script>
+
+// ===========================
+
+// FIREBASE KONFIGURATION
+
+// ===========================
+
+/* Firebase-Projekt-Konfiguration für Authentifizierung */
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyAcp47sENBIrAkQrnsQPiGZ9SOtympZwik",
+
+authDomain: "eduflow-d032e.firebaseapp.com",
+
+projectId: "eduflow-d032e",
+
+storageBucket: "eduflow-d032e.appspot.com",
+
+messagingSenderId: "431287771673",
+
+appId: "1:431287771673:web:3c211b524455bdd3bc4088"
+
+    };
+
+/* Firebase nur initialisieren, wenn noch nicht geschehen */
+
+if (!firebase.apps.length) {
+
+firebase.initializeApp(firebaseConfig);
+
+    }
+
+// ===========================
+
+// INITIALISIERUNG & DATENSTRUKTUR
+
+// ===========================
+
+/* URL-Parameter auslesen: Welches Karteikarten-Set wird bearbeitet? */
+
+const urlParams = new URLSearchParams(window.location.search);
+
+const setName = urlParams.get('name') || 'default';
+
+/* Eindeutiger Storage-Key für dieses Set */
+
+const storageKey = `flashcards_${setName}`;
+
+/* Karteikarten aus localStorage laden oder leeres Array erstellen */
+
+let cards = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+/* Aktueller Index in der Gesamtliste */
+
+let currentIndex = 0;
+
+/* Ist die Karte gerade umgedreht? */
+
+let flipped = false;
+
+/* Index in der Liste der zu lernenden Karten */
+
+let learningIndex = 0;
+
+// ===========================
+
+// HILFSFUNKTIONEN FÜR KARTENVERWALTUNG
+
+// ===========================
+
+/* Gibt nur die Karten zurück, die noch gelernt werden müssen (known = false) */
+
+function getLearningCards() {
+
+return cards.filter(card => !card.known);
+
+    }
+
+/* Gibt nur die bereits gelernten Karten zurück (known = true) */
+
+function getKnownCards() {
+
+return cards.filter(card => card.known);
+
+    }
+
+// ===========================
+
+// INITIALISIERUNG BEI SEITENLADEVORGANG
+
+// ===========================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+/* Set-Namen in den Header einfügen */
+
+const titleElement = document.querySelector(".logo-text");
+
+if (titleElement) {
+
+titleElement.textContent = setName;
+
+      }
+
+/* Set-Namen auch im Hauptbereich anzeigen */
+
+document.getElementById("set-name").textContent = `Karteikarten Set: ${setName}`;
+
+/* UI mit aktuellen Daten aktualisieren */
+
+updateUI();
+
+/* Event-Listener für Löschen-Button */
+
+document.getElementById("delete-btn").addEventListener("click", e => {
+
+e.stopPropagation(); /* Verhindert, dass Karte beim Löschen umgedreht wird */
+
+deleteCard();
+
+      });
+
+    });
+
+// ===========================
+
+// UI-UPDATE FUNKTION (KERNLOGIK)
+
+// ===========================
+
+/* Aktualisiert die gesamte Benutzeroberfläche basierend auf dem aktuellen Status */
+
+function updateUI() {
+
+/* Alle relevanten DOM-Elemente holen */
+
+const cardFront = document.getElementById("card-front");
+
+const cardBack = document.getElementById("card-back");
+
+const card = document.getElementById("card");
+
+const cardIndex = document.getElementById("card-index");
+
+const actionButtons = document.getElementById("action-buttons");
+
+const cardContainer = document.getElementById("card-container");
+
+const congratulations = document.getElementById("congratulations");
+
+const progressContainer = document.getElementById("progress-container");
+
+const progressBar = document.getElementById("progress-bar");
+
+/* Gefilterte Kartenlisten */
+
+const learningCards = getLearningCards();
+
+const knownCards = getKnownCards();
+
+/* FALL 1: Keine Karten vorhanden */
+
+if(cards.length === 0) {
+
+cardFront.textContent = "Keine Karten vorhanden";
+
+cardBack.textContent = "";
+
+card.classList.remove("flipped");
+
+cardIndex.textContent = "Karte 0 von 0";
+
+flipped = false;
+
+actionButtons.style.display = "none";
+
+congratulations.style.display = "none";
+
+cardContainer.style.display = "block";
+
+progressContainer.style.display = "none";
+
+return;
+
+      }
+
+/* FALL 2: Alle Karten gelernt */
+
+if(learningCards.length === 0 && knownCards.length > 0) {
+
+congratulations.style.display = "block";
+
+cardContainer.style.display = "none";
+
+cardIndex.textContent = `Alle ${cards.length} Karten erfolgreich gelernt!`;
+
+progressContainer.style.display = "none";
+
+return;
+
+      }
+
+/* FALL 3: Normale Lern-Ansicht */
+
+congratulations.style.display = "none";
+
+cardContainer.style.display = "block";
+
+progressContainer.style.display = "block";
+
+/* Index-Überprüfung und Korrektur */
+
+if(learningIndex >= learningCards.length) learningIndex = 0;
+
+if(learningIndex < 0) learningIndex = 0;
+
+/* Aktuelle Karte ermitteln */
+
+const currentCard = learningCards[learningIndex];
+
+currentIndex = cards.findIndex(c => c === currentCard);
+
+/* Karteninhalt setzen */
+
+cardFront.textContent = currentCard.front;
+
+cardBack.textContent = currentCard.back;
+
+/* Kartennummer anzeigen */
+
+cardIndex.textContent = `Lernkarten: ${learningIndex + 1} von ${learningCards.length}`;
+
+/* Fortschrittsbalken aktualisieren */
+
+const progress = (knownCards.length / cards.length) * 100;
+
+progressBar.style.width = `${progress}%`;
+
+/* Flip-Status anwenden */
+
+if(flipped) {
+
+card.classList.add("flipped");
+
+actionButtons.style.display = "flex";
+
+      } else {
+
+card.classList.remove("flipped");
+
+actionButtons.style.display = "none";
+
+      }
+
+    }
+
+// ===========================
+
+// KARTENINTERAKTIONEN
+
+// ===========================
+
+/* Karte umdrehen (Vorder- <-> Rückseite) */
+
+function flipCard() {
+
+if(cards.length === 0) return;
+
+flipped = !flipped;
+
+updateUI();
+
+    }
+
+/* Aktuelle Karte löschen */
+
+function deleteCard() {
+
+if(cards.length === 0) return;
+
+if (!confirm("Diese Karte wirklich löschen?")) return;
+
+/* Karte aus Array entfernen */
+
+cards.splice(currentIndex, 1);
+
+saveCards();
+
+/* Index anpassen, falls nötig */
+
+if(learningIndex >= getLearningCards().length) learningIndex = 0;
+
+flipped = false;
+
+updateUI();
+
+    }
+
+/* Neue Karte hinzufügen */
+
+function addCard() {
+
+const frontInput = document.getElementById("front-input");
+
+const backInput = document.getElementById("back-input");
+
+const front = frontInput.value.trim();
+
+const back = backInput.value.trim();
+
+/* Validierung: Beide Felder müssen ausgefüllt sein */
+
+if(front === "" || back === "") {
+
+alert("Bitte Vorder- und Rückseite ausfüllen.");
+
+return;
+
+      }
+
+/* Neue Karte erstellen (standardmäßig nicht gelernt) */
+
+cards.push({ front, back, known: false });
+
+saveCards();
+
+/* Eingabefelder leeren */
+
+frontInput.value = "";
+
+backInput.value = "";
+
+/* Zur neuen Karte springen */
+
+learningIndex = getLearningCards().length - 1;
+
+flipped = false;
+
+updateUI();
+
+    }
+
+/* Karten in localStorage speichern */
+
+function saveCards() {
+
+localStorage.setItem(storageKey, JSON.stringify(cards));
+
+    }
+
+// ===========================
+
+// LERN-AKTIONEN
+
+// ===========================
+
+/* Karte als "gelernt" markieren */
+
+function markKnown(event) {
+
+event.stopPropagation(); /* Verhindert Kartenflip */
+
+cards[currentIndex].known = true;
+
+saveCards();
+
+/* Zur nächsten ungeLernten Karte */
+
+const learningCards = getLearningCards();
+
+if(learningIndex >= learningCards.length) {
+
+learningIndex = 0;
+
+      }
+
+flipped = false;
+
+updateUI();
+
+    }
+
+/* Karte als "noch zu lernen" markieren */
+
+function markUnknown(event) {
+
+event.stopPropagation();
+
+learningIndex++; /* Einfach zur nächsten Karte */
+
+const learningCards = getLearningCards();
+
+/* Zurück zum Anfang, wenn am Ende */
+
+if(learningIndex >= learningCards.length) {
+
+learningIndex = 0;
+
+      }
+
+flipped = false;
+
+updateUI();
+
+    }
+
+/* Alle Karten zurücksetzen und von vorne beginnen */
+
+function restartLearning() {
+
+/* Alle Karten wieder auf "nicht gelernt" setzen */
+
+cards.forEach(card => {
+
+card.known = false;
+
+      });
+
+learningIndex = 0;
+
+flipped = false;
+
+saveCards();
+
+updateUI();
+
+    }
+
+// ===========================
+
+// SWIPE-FUNKTIONALITÄT
+
+// ===========================
+
+/* Touch/Maus-Interaktion für Swipe-Gesten */
+
+let startX = 0; /* Startposition der Touch/Maus-Eingabe */
+
+let isDragging = false; /* Wird gerade geswiped? */
+
+/* Hilfsfunktion: X-Koordinate aus Touch- oder Maus-Event holen */
+
+function getClientX(e) {
+
+return e.touches ? e.touches[0].clientX : e.clientX;
+
+    }
+
+/* Swipe-Animation ausführen und entsprechende Aktion triggern */
+
+function swipeCard(direction) {
+
+const card = document.getElementById("card");
+
+/* CSS-Klasse für Animation hinzufügen */
+
+card.classList.add(direction === "right" ? "swipe-right" : "swipe-left");
+
+/* Nach Animation: Aktion ausführen und UI aktualisieren */
+
+setTimeout(() => {
+
+card.classList.remove("swipe-right", "swipe-left");
+
+if (direction === "right") {
+
+/* Rechts = Kann ich */
+
+cards[currentIndex].known = true;
+
+        } else {
+
+/* Links = Noch lernen */
+
+learningIndex++;
+
+        }
+
+saveCards();
+
+const learningCards = getLearningCards();
+
+if (learningIndex >= learningCards.length) learningIndex = 0;
+
+flipped = false;
+
+updateUI();
+
+      }, 300); /* 300ms = Dauer der Swipe-Animation */
+
+    }
+
+/* Event-Listener für Swipe-Start */
+
+const cardEl = document.getElementById("card");
+
+cardEl.addEventListener("mousedown", startDrag);
+
+cardEl.addEventListener("touchstart", startDrag);
+
+/* Drag/Swipe starten */
+
+function startDrag(e) {
+
+if (!flipped) return; /* Nur auf Rückseite swipebar */
+
+isDragging = true;
+
+startX = getClientX(e);
+
+cardEl.style.transition = "none"; /* Smooth Animation während Drag deaktivieren */
+
+/* Event-Listener für Bewegung und Ende */
+
+document.addEventListener("mousemove", onDrag);
+
+document.addEventListener("mouseup", endDrag);
+
+document.addEventListener("touchmove", onDrag);
+
+document.addEventListener("touchend", endDrag);
+
+    }
+
+/* Während des Drags: Karte bewegen und Overlay anzeigen */
+
+function onDrag(e) {
+
+if (!isDragging) return;
+
+const diff = getClientX(e) - startX; /* Unterschied zur Startposition */
+
+const overlayGreen = document.getElementById("overlay-green");
+
+const overlayRed = document.getElementById("overlay-red");
+
+/* Karte bewegen und leicht rotieren */
+
+cardEl.style.transform = `translateX(${diff}px) rotate(${diff / 15}deg)`;
+
+/* Overlay basierend auf Swipe-Richtung anzeigen */
+
+if (diff > 30) {
+
+/* Nach rechts = Grün (Kann ich) */
+
+overlayGreen.classList.add("active");
+
+overlayRed.classList.remove("active");
+
+/* Opacity steigt mit Swipe-Distanz */
+
+overlayGreen.style.opacity = Math.min(Math.abs(diff) / 120, 1);
+
+      } else if (diff < -30) {
+
+/* Nach links = Rot (Noch lernen) */
+
+overlayRed.classList.add("active");
+
+overlayGreen.classList.remove("active");
+
+overlayRed.style.opacity = Math.min(Math.abs(diff) / 120, 1);
+
+      } else {
+
+/* Zu wenig Bewegung = kein Overlay */
+
+overlayGreen.classList.remove("active");
+
+overlayRed.classList.remove("active");
+
+      }
+
+    }
+
+/* Drag beenden: Entscheiden ob Swipe ausgeführt wird */
+
+function endDrag(e) {
+
+if (!isDragging) return;
+
+isDragging = false;
+
+const diff = getClientX(e) - startX;
+
+const overlayGreen = document.getElementById("overlay-green");
+
+const overlayRed = document.getElementById("overlay-red");
+
+/* Transitions wieder aktivieren */
+
+cardEl.style.transition = "";
+
+cardEl.style.transform = "";
+
+/* Overlays ausblenden */
+
+overlayGreen.classList.remove("active");
+
+overlayRed.classList.remove("active");
+
+overlayGreen.style.opacity = "";
+
+overlayRed.style.opacity = "";
+
+/* Schwellenwert für Swipe: 120px */
+
+if (diff > 120) {
+
+swipeCard("right"); /* Swipe nach rechts = Kann ich */
+
+      } else if (diff < -120) {
+
+swipeCard("left"); /* Swipe nach links = Noch lernen */
+
+      }
+
+/* Event-Listener entfernen */
+
+document.removeEventListener("mousemove", onDrag);
+
+document.removeEventListener("mouseup", endDrag);
+
+document.removeEventListener("touchmove", onDrag);
+
+document.removeEventListener("touchend", endDrag);
+
+    }
+
+</script>
+
+</body>
+
+</html>

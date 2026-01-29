@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tagebücher</title>
+
+<!-- ============================================
+     EXTERNAL RESOURCES - Fonts, Icons & Libraries
+     ============================================ -->
+<!-- Google Material Icons für Icons wie Pfeile, Bücher, etc. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+<!-- Poppins Schriftart für modernes Design -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+
+<!-- Material Design Lite (MDL) Framework - optional -->
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" />
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+<style>
+    /* ============================================
+       CSS VARIABLEN - Globale Design-Tokens
+       ============================================ */
+    /* Zentrale Farbdefinitionen und Größen für konsistentes Design */
+    :root {
+      /* Farben */
+      --white-color: #FFFFFF;
+      --dark-color: #000000;
+      --primary-color: #106cc2;
+      --secondary-color: #1153cf;
+      --background-color: #0c3b99;
+      --background-light: #f0f2f7;
+      --nav-height: 60px;
+      
+      /* Schriftgrößen */
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      
+      /* Schriftgewichte */
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      
+      /* Border Radius */
+      --border-radius-m: 12px;
+    }
+
+    /* ============================================
+       GLOBAL RESET
+       ============================================ */
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--background-light); /* Hellgrauer Hintergrund wie bei Notizen */
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ============================================
+       HEADER - Einheitlicher Header wie bei Notizen
+       ============================================ */
+    /* Fixierter Header, bleibt beim Scrollen sichtbar */
+    header {
+      position: fixed;
+      width: 100%;
+      z-index: 5;
+      background: var(--background-color); /* Blaue Hintergrundfarbe */
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Navbar Layout */
+    header .navbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Für symmetrisches Layout */
+      padding: 15px 25px;
+    }
+
+    /* Logo zentriert durch absolute Positionierung */
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    /* Logo-Text Styling */
+    .navbar .logo-text {
+      color: var(--white-color);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    /* Zurück-Button */
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Hover-Effekt für Zurück-Button */
+    .back-button:hover i {
+      color: #d0d0d0;
+    }
+
+    /* Icon im Zurück-Button */
+    .back-button .material-icons {
+      font-size: 32px;
+      color: var(--white-color);
+    }
+
+    /* ============================================
+       PAGE CONTENT - Hauptinhalt
+       ============================================ */
+    .page-content {
+      margin-top: 80px; /* Abstand wegen fixiertem Header */
+    }
+
+    /* ============================================
+       CONTAINER - Zentraler Container wie bei Notizen
+       ============================================ */
+    .container {
+      max-width: 500px;
+      margin: 120px auto 40px auto;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* ============================================
+       ÜBERSCHRIFT
+       ============================================ */
+    h4 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+
+    /* ============================================
+       FORMULAR - Tagebuch erstellen
+       ============================================ */
+    /* Container für Input und Button */
+    .diary-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    /* Input-Feld */
+    .diary-input {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    /* Focus-Effekt für Input */
+    .diary-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1);
+    }
+
+    /* Anlegen-Button */
+    .save-button {
+      background-color: #1153cf;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    /* Hover-Effekt für Button */
+    .save-button:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================
+       TAGEBUCH-LISTE - Übersicht aller Tagebücher
+       ============================================ */
+    .diary-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    /* Einzelner Tagebuch-Eintrag */
+    .diary-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f7f8fa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    /* Hover-Effekt für Tagebuch-Einträge */
+    .diary-list li:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================
+       TAGEBUCH ITEM CONTENT - Icon + Name
+       ============================================ */
+    .diary-item-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+    }
+
+    /* Icon für Tagebuch (Buch-Symbol) */
+    .diary-item-content i {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    /* Tagebuch-Name */
+    .diary-name {
+      color: #1153cf;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       DELETE BUTTON - Löschen-Button
+       ============================================ */
+    .delete-btn {
+      cursor: pointer;
+      color: #e53935;
+      font-size: 22px;
+      background: none;
+      border: none;
+      padding: 0 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Hover-Effekt für Löschen-Button */
+    .delete-btn:hover {
+      background: #ffeaea;
+    }
+
+    /* Icon im Löschen-Button */
+    .delete-btn .material-icons {
+      font-size: 22px;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+       ============================================ */
+    @media (max-width: 768px) {
+      header .navbar {
+        padding: 4px 15px;
+      }
+      .logo-text {
+        font-size: 1.4rem;
+      }
+      .page-content {
+        margin-top: 100px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 100px 15px;
+      }
+    }
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     HEADER - Fixierte Navigation
+     ============================================ -->
+<header>
+  <nav class="navbar">
+    <!-- Zurück-Button zur Startseite -->
+    <button class="back-button" onclick="window.location.href='index.html'" title="Zurück zur Startseite">
+      <i class="material-icons">arrow_back</i>
+    </button>
+    
+    <!-- Logo/Titel in der Mitte -->
+    <div class="nav-logo">
+      <span class="logo-text">Tagebücher</span>
+    </div>
+    
+    <!-- Platzhalter für symmetrisches Layout -->
+    <div style="width: 40px;"></div>
+  </nav>
+</header>
+
+<!-- ============================================
+     MAIN CONTENT - Tagebücher Übersicht
+     ============================================ -->
+<main>
+  <div class="page-content">
+    <div class="container">
+      
+      <!-- Überschrift -->
+      <h4>Neues Tagebuch erstellen</h4>
+      
+      <!-- ============================================
+           FORMULAR - Neues Tagebuch anlegen
+           ============================================ -->
+      <form class="diary-form" onsubmit="event.preventDefault(); addDiary();">
+        
+        <!-- Input-Feld für Tagebuch-Namen -->
+        <input
+          type="text"
+          id="diaryname"
+          placeholder="Name des Tagebuchs..."
+          autocomplete="off"
+          class="diary-input"
+        />
+        
+        <!-- Anlegen-Button -->
+        <button type="submit" class="save-button">Anlegen</button>
+      </form>
+      
+      <!-- ============================================
+           TAGEBUCH-LISTE - Wird per JavaScript gefüllt
+           ============================================ -->
+      <ul class="diary-list" id="diarylist"></ul>
+      
+    </div>
+  </div>
+</main>
+
+<!-- ============================================
+     FIREBASE SDK - Authentifizierung & Datenbank
+     ============================================ -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script>
+    // ============================================
+    // FIREBASE KONFIGURATION
+    // ============================================
+    /* Firebase-Projekt-Konfiguration */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcp47sENBIrAkQrnsQPiGZ9SOtympZwik",
+      authDomain: "eduflow-d032e.firebaseapp.com",
+      projectId: "eduflow-d032e",
+      storageBucket: "eduflow-d032e.appspot.com",
+      messagingSenderId: "431287771673",
+      appId: "1:431287771673:web:3c211b524455bdd3bc4088"
+    };
+
+    /* Firebase initialisieren (nur wenn noch nicht initialisiert) */
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // ============================================
+    // KONSTANTEN
+    // ============================================
+    
+    /* localStorage-Key für die Tagebücher-Liste */
+    const storageKey = "tagebuecher";
+
+    // ============================================
+    // INITIALISIERUNG
+    // ============================================
+    
+    /* Event-Listener: Lädt Tagebücher beim Seitenload */
+    document.addEventListener("DOMContentLoaded", loadDiaries);
+
+    // ============================================
+    // TAGEBÜCHER LADEN
+    // ============================================
+    
+    /**
+     * Lädt alle Tagebücher aus localStorage und zeigt sie an
+     */
+    function loadDiaries() {
+      // Tagebücher aus localStorage laden (oder leeres Array)
+      let diaries = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      // Listen-Element aus DOM holen
+      const list = document.getElementById("diarylist");
+      list.innerHTML = ""; // Liste leeren
+
+      // ============================================
+      // Für jedes Tagebuch einen Listeneintrag erstellen
+      // ============================================
+      diaries.forEach(name => {
+        
+        // <li> Element erstellen
+        const li = document.createElement("li");
+
+        // ============================================
+        // CONTENT CONTAINER - Icon + Name
+        // ============================================
+        const content = document.createElement("div");
+        content.className = "diary-item-content";
+
+        // Icon erstellen (Buch-Symbol)
+        const icon = document.createElement("i");
+        icon.className = "material-icons";
+        icon.textContent = "menu_book"; // Material Icon: Buch
+
+        // Name-Span erstellen
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = name;
+        nameSpan.className = "diary-name";
+
+        // Icon und Name zum Content hinzufügen
+        content.appendChild(icon);
+        content.appendChild(nameSpan);
+
+        // ============================================
+        // DELETE BUTTON - Löschen-Button
+        // ============================================
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.title = "Löschen";
+        deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
+
+        // Onclick für Löschen-Button (stopPropagation verhindert li-Click)
+        deleteBtn.addEventListener("click", e => {
+          e.stopPropagation();
+          deleteDiary(name);
+        });
+
+        // Content und Delete-Button zum <li> hinzufügen
+        li.appendChild(content);
+        li.appendChild(deleteBtn);
+
+        // ============================================
+        // CLICK HANDLER - Öffnet Tagebuch-Einträge
+        // ============================================
+        /* Bei Klick auf den Listeneintrag: Zur Einträge-Seite navigieren */
+        li.addEventListener("click", () => {
+          window.location.href = `tagebucheintrage.html?name=${encodeURIComponent(name)}`;
+        });
+
+        // <li> zur Liste hinzufügen
+        list.appendChild(li);
+      });
+    }
+
+    // ============================================
+    // TAGEBUCH HINZUFÜGEN
+    // ============================================
+    
+    /**
+     * Erstellt ein neues Tagebuch und speichert es
+     */
+    function addDiary() {
+      // Input-Feld auslesen
+      const input = document.getElementById("diaryname");
+      const name = input.value.trim();
+
+      // Abbrechen wenn leer
+      if (!name) return;
+
+      // Bestehende Tagebücher laden
+      let diaries = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+      // Prüfen ob Name bereits existiert
+      if (diaries.includes(name)) {
+        alert("Ein Tagebuch mit diesem Namen existiert bereits.");
+        return;
+      }
+
+      // Neues Tagebuch zur Liste hinzufügen
+      diaries.push(name);
+
+      // In localStorage speichern
+      localStorage.setItem(storageKey, JSON.stringify(diaries));
+
+      // Input-Feld leeren
+      input.value = "";
+
+      // Liste neu rendern
+      loadDiaries();
+    }
+
+    // ============================================
+    // TAGEBUCH LÖSCHEN
+    // ============================================
+    
+    /**
+     * Löscht ein Tagebuch nach Bestätigung
+     * @param {string} name - Name des zu löschenden Tagebuchs
+     */
+    function deleteDiary(name) {
+      // Bestätigung einholen (WICHTIG: Template-Literal mit Backticks!)
+      if (!confirm(`Möchten Sie das Tagebuch "${name}" wirklich löschen? Alle Einträge gehen verloren.`)) return;
+
+      // Tagebücher-Liste aus localStorage laden
+      let diaries = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+      // Tagebuch aus Liste entfernen
+      diaries = diaries.filter(d => d !== name);
+
+      // Aktualisierte Liste speichern
+      localStorage.setItem(storageKey, JSON.stringify(diaries));
+
+      // Auch die Einträge des Tagebuchs löschen (WICHTIG: Template-Literal!)
+      localStorage.removeItem(`eintraege_${name}`);
+
+      // Liste neu rendern
+      loadDiaries();
+    }
+</script>
+
+<!-- Auth-Protection Script (falls vorhanden) -->
+<script src="auth-protect.js"></script>
+
+</body>
+</html>

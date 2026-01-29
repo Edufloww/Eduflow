@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Meine Notizen</title>
+<!-- ============================================
+       FONTS & ICONS - Google Fonts und Material Icons
+       ============================================ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+<!-- WICHTIG: Hier war ein Fehler - das schließende Anführungszeichen hat gefehlt! -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:wght@400;500;600;700&display=swap" />
+<style>
+    /* ============================================
+       CSS VARIABLEN - Globale Design-Tokens
+       ============================================ */
+    /* Zentrale Definition aller Farben, Größen und Abstände
+       für konsistentes Design im gesamten Dokument */
+    :root {
+      /* Farben */
+      --white-color: #FFFFFF;
+      --dark-color: #000000;
+      --primary-color: #106cc2;
+      --secondary-color: #1153cf;
+      --background-color: #0c3b99;
+      --background-light: #f0f2f7;
+      --nav-height: 60px;
+      
+      /* Schriftgrößen */
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      --font-size-xxl: 2.3rem;
+      
+      /* Schriftgewichte */
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+      
+      /* Border Radius Werte */
+      --border-radius-s: 8px;
+      --border-radius-m: 30px;
+      --border-radius-circle: 50%;
+      
+      /* Maximale Seitenbreite */
+      --site-max-width: 1300px;
+    }
+
+    /* ============================================
+       GLOBAL RESET - Basis-Styling
+       ============================================ */
+    /* Entfernt Browser-Standardabstände und setzt einheitliche Box-Berechnung */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Body Grundstil */
+    body {
+      margin: 0;
+      background-color: var(--background-light);
+      min-height: 100vh;
+    }
+
+    /* ============================================
+       HEADER - Fixierte Navigation oben
+       ============================================ */
+    /* Header bleibt beim Scrollen oben fixiert */
+    header {
+      position: fixed;
+      width: 100%;
+      z-index: 5;
+      background: var(--background-color);
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Navbar Container mit Flexbox-Layout */
+    header .navbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 25px;
+    }
+
+    /* Logo in der Mitte durch absolute Positionierung */
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%); /* Perfekte horizontale Zentrierung */
+      text-align: center;
+    }
+
+    /* Logo-Text im Header */
+    .navbar .nav-logo .logo-text {
+      color: var(--white-color);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Zurück-Button (links im Header) */
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Hover-Effekt für Zurück-Button */
+    .back-button:hover i {
+      color: #d0d0d0;
+    }
+
+    /* Icon im Zurück-Button */
+    .back-button .material-icons {
+      font-size: 32px;
+      color: var(--white-color);
+    }
+
+    /* ============================================
+       PAGE CONTENT - Hauptinhalt
+       ============================================ */
+    /* Abstand nach oben wegen fixiertem Header */
+    .page-content {
+      margin-top: 80px;
+    }
+
+    /* ============================================
+       CONTAINER - Hauptcontainer
+       ============================================ */
+    /* Zentraler Container für die Notizen-Übersicht */
+    .container {
+      max-width: 500px;
+      margin: 120px auto 40px auto;
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* ============================================
+       ÜBERSCHRIFT
+       ============================================ */
+    h4 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+
+    /* ============================================
+       NOTIZEN FORMULAR - Input + Button
+       ============================================ */
+    /* Formular-Container mit Flexbox für Input und Button nebeneinander */
+    .notiz-form {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    /* Input-Feld für Notiz-Namen */
+    .notiz-input {
+      flex: 1; /* Nimmt verfügbaren Platz ein */
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.3s;
+    }
+
+    /* Focus-Effekt für Input (blauer Rand + Glow) */
+    .notiz-input:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1);
+    }
+
+    /* Anlegen-Button */
+    .save-button {
+      background-color: #1153cf;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    /* Hover-Effekt für Button (dunkler + leicht angehoben) */
+    .save-button:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================
+       NOTIZEN LISTE - Übersicht aller Notizen
+       ============================================ */
+    /* Entfernt Standard-Listenpunkte */
+    .notiz-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    /* Einzelne Notiz in der Liste */
+    .notiz-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Inhalt links, Löschen-Button rechts */
+      background: #f7f8fa;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    /* Hover-Effekt für Notiz-Einträge (stärkerer Schatten + Anhebung) */
+    .notiz-list li:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================
+       NOTIZ ITEM CONTENT - Icon + Name
+       ============================================ */
+    /* Container für Icon und Notiz-Name */
+    .notiz-item-content {
+      flex: 1; /* Nimmt verfügbaren Platz ein */
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+    }
+
+    /* Icon für Notiz (Dokument-Symbol) */
+    .notiz-item-content i {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    /* Notiz-Name (Text) */
+    .notiz-name {
+      color: #1153cf;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       DELETE BUTTON - Löschen-Button
+       ============================================ */
+    /* Roter Löschen-Button rechts neben jeder Notiz */
+    .delete-btn {
+      cursor: pointer;
+      color: #e53935;
+      font-size: 22px;
+      background: none;
+      border: none;
+      padding: 0 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Hover-Effekt für Löschen-Button (hellroter Hintergrund) */
+    .delete-btn:hover {
+      background: #ffeaea;
+    }
+
+    /* Icon im Löschen-Button */
+    .delete-btn .material-icons {
+      font-size: 22px;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN - Mobile Ansicht
+       ============================================ */
+    /* Tablet und kleinere Bildschirme */
+    @media (max-width: 768px) {
+      header .navbar {
+        padding: 4px 15px;
+      }
+      .logo-text {
+        font-size: 1.4rem;
+      }
+      .page-content {
+        margin-top: 100px;
+      }
+    }
+
+    /* Mobile Geräte */
+    @media (max-width: 600px) {
+      .container {
+        margin: 100px 15px;
+      }
+    }
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     HEADER - Fixierte Navigation
+     ============================================ -->
+<header>
+  <nav class="navbar">
+    <!-- Zurück-Button zur Startseite -->
+    <button class="back-button" onclick="window.location.href='index.html'">
+      <i class="material-icons">arrow_back</i>
+    </button>
+    
+    <!-- Logo/Titel in der Mitte -->
+    <div class="nav-logo">
+      <span class="logo-text">Meine Notizen</span>
+    </div>
+    
+    <!-- Platzhalter für symmetrisches Layout (gleiche Breite wie Zurück-Button) -->
+    <div style="width: 40px;"></div>
+  </nav>
+</header>
+
+<!-- ============================================
+     MAIN CONTENT - Notizen Übersicht
+     ============================================ -->
+<main>
+  <div class="page-content">
+    <div class="container">
+      
+      <!-- Überschrift -->
+      <h4>Neue Notiz erstellen</h4>
+      
+      <!-- ============================================
+           FORMULAR - Neue Notiz anlegen
+           ============================================ -->
+      <!-- preventDefault verhindert Standard-Formular-Submit -->
+      <form class="notiz-form" onsubmit="event.preventDefault(); addNotiz();">
+        
+        <!-- Input-Feld für Notiz-Namen -->
+        <input
+          type="text"
+          id="notizname"
+          placeholder="Name der Notiz..."
+          autocomplete="off"
+          class="notiz-input"
+        />
+        
+        <!-- Anlegen-Button -->
+        <button type="submit" class="save-button">Anlegen</button>
+      </form>
+      
+      <!-- ============================================
+           NOTIZEN LISTE - Wird per JavaScript gefüllt
+           ============================================ -->
+      <!-- Wird dynamisch mit JavaScript befüllt -->
+      <ul class="notiz-list" id="notizlist"></ul>
+      
+    </div>
+  </div>
+</main>
+
+<!-- ============================================
+     JAVASCRIPT LOGIK - Notizen-Verwaltung
+     ============================================ -->
+<script>
+    // ============================================
+    // KONSTANTEN
+    // ============================================
+    
+    /* localStorage-Key für die Notizen-Liste
+     * Unter diesem Schlüssel wird das Array aller Notiz-Namen gespeichert */
+    const storageKey = "notizen";
+
+    // ============================================
+    // INITIALISIERUNG - Beim Laden der Seite
+    // ============================================
+    
+    /* Event-Listener: Lädt Notizen sobald DOM fertig geladen ist
+     * DOMContentLoaded feuert wenn HTML komplett geparst wurde */
+    document.addEventListener("DOMContentLoaded", loadNotizen);
+
+    // ============================================
+    // NOTIZEN LADEN - Aus localStorage
+    // ============================================
+    
+    /**
+     * Lädt alle Notizen aus localStorage und zeigt sie an
+     * Wird beim Seitenload und nach jeder Änderung aufgerufen
+     */
+    function loadNotizen() {
+      // Notizen aus localStorage laden (oder leeres Array falls nichts vorhanden)
+      let notizen = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      // Liste-Element aus DOM holen
+      const list = document.getElementById("notizlist");
+      list.innerHTML = ""; // Liste leeren (wichtig für Neurendern)
+
+      // ============================================
+      // Für jede Notiz einen Listeneintrag erstellen
+      // ============================================
+      notizen.forEach(name => {
+        
+        // <li> Element erstellen
+        const li = document.createElement("li");
+
+        // ============================================
+        // CONTENT - Icon + Name (klickbar)
+        // ============================================
+        const content = document.createElement("div");
+        content.className = "notiz-item-content";
+        
+        // Onclick: Öffnet den Notiz-Editor mit dieser Notiz
+        // URL-Parameter wird für Notiz-Identifikation verwendet
+        content.onclick = () => {
+          window.location.href = `notizen.html?name=${encodeURIComponent(name)}`;
+        };
+
+        // Icon erstellen (Notiz-Symbol)
+        const icon = document.createElement("i");
+        icon.className = "material-icons";
+        icon.textContent = "description"; // Material Icon: Dokument/Notiz
+
+        // Name-Span erstellen
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "notiz-name";
+        nameSpan.textContent = name;
+
+        // Icon und Name zum Content hinzufügen
+        content.appendChild(icon);
+        content.appendChild(nameSpan);
+
+        // ============================================
+        // DELETE BUTTON - Löschen-Button
+        // ============================================
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
+        
+        // Onclick: Löscht die Notiz (mit Bestätigung)
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation(); // Verhindert dass auch der li-onclick ausgelöst wird
+          deleteNotiz(name);
+        };
+
+        // Content und Delete-Button zum <li> hinzufügen
+        li.appendChild(content);
+        li.appendChild(deleteBtn);
+
+        // <li> zur Liste hinzufügen
+        list.appendChild(li);
+      });
+    }
+
+    // ============================================
+    // NOTIZ HINZUFÜGEN - Neue Notiz erstellen
+    // ============================================
+    
+    /**
+     * Erstellt eine neue Notiz und speichert sie in localStorage
+     * Wird beim Absenden des Formulars aufgerufen
+     */
+    function addNotiz() {
+      // Input-Feld auslesen
+      const input = document.getElementById("notizname");
+      const name = input.value.trim(); // Leerzeichen am Anfang/Ende entfernen
+
+      // Abbrechen wenn leer
+      if (!name) return;
+
+      // Bestehende Notizen laden
+      let notizen = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+      // Prüfen ob Name bereits existiert (Duplikate verhindern)
+      if (notizen.includes(name)) {
+        alert("Eine Notiz mit diesem Namen existiert bereits.");
+        return; // Abbrechen
+      }
+
+      // Neue Notiz zur Liste hinzufügen
+      notizen.push(name);
+
+      // In localStorage speichern (als JSON-String)
+      localStorage.setItem(storageKey, JSON.stringify(notizen));
+
+      // Input-Feld leeren
+      input.value = "";
+
+      // Liste neu rendern um neue Notiz anzuzeigen
+      loadNotizen();
+    }
+
+    // ============================================
+    // NOTIZ LÖSCHEN - Mit Bestätigung
+    // ============================================
+    
+    /**
+     * Löscht eine Notiz nach Bestätigung
+     * Entfernt sowohl den Listeneintrag als auch alle gespeicherten Inhalte
+     * @param {string} name - Name der zu löschenden Notiz
+     */
+    function deleteNotiz(name) {
+      // Bestätigung vom Benutzer einholen (WICHTIG: Hier waren falsche Backticks!)
+      if (!confirm(`Notiz "${name}" wirklich löschen? Alle Inhalte gehen verloren.`)) return;
+
+      // Notizen-Liste aus localStorage laden
+      let notizen = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+      // Notiz aus Liste entfernen (filter erstellt neues Array ohne die Notiz)
+      notizen = notizen.filter(n => n !== name);
+
+      // Aktualisierte Liste speichern
+      localStorage.setItem(storageKey, JSON.stringify(notizen));
+
+      // Auch die Daten der Notiz selbst löschen (WICHTIG: Hier waren auch falsche Backticks!)
+      // Jede Notiz hat ihren eigenen localStorage-Key: "notiz_NAME"
+      localStorage.removeItem(`notiz_${name}`);
+
+      // Liste neu rendern um gelöschte Notiz zu entfernen
+      loadNotizen();
+    }
+</script>
+
+<!-- Auth-Protection Script (falls vorhanden) -->
+<script src="auth-protect.js"></script>
+
+</body>
+</html>

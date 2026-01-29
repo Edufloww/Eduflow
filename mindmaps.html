@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mindmaps</title>
+
+  <!-- ============================================
+       FONTS & ICONS - Google Fonts und Material Icons
+       ============================================ -->
+  <!-- Material Icons für Zurück-Button und Icons -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <!-- Poppins und Miniver Schriftarten -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:wght@400;500;600;700&display=swap" />
+
+  <style>
+    /* ============================================
+       CSS VARIABLEN - Globale Design-Tokens
+       ============================================ */
+    :root {
+      /* Farben */
+      --white-color: #FFFFFF;
+      --dark-color: #000000;
+      --primary-color: #106cc2;
+      --secondary-color: #1153cf;
+      --background-color: #0c3b99;
+      --background-light: #f0f2f7;
+      --nav-height: 60px;
+
+      /* Schriftgrößen */
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      --font-size-xxl: 2.3rem;
+
+      /* Schriftgewichte */
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+
+      /* Border Radius Werte */
+      --border-radius-s: 8px;
+      --border-radius-m: 30px;
+      --border-radius-circle: 50%;
+      
+      /* Maximale Seitenbreite */
+      --site-max-width: 1300px;
+    }
+
+    /* ============================================
+       GLOBAL RESET - Basis-Styling
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* Padding/Border in width einberechnen */
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Body Grundstil */
+    body {
+      margin: 0;
+      background-color: var(--background-light);
+      min-height: 100vh; /* Mindestens Vollbild-Höhe */
+    }
+
+    /* ============================================
+       HEADER - Fixierte Navigation oben
+       ============================================ */
+    header {
+      position: fixed; /* Bleibt beim Scrollen oben */
+      width: 100%;
+      z-index: 5; /* Liegt über anderen Elementen */
+      background: var(--background-color);
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Navbar Container */
+    header .navbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Platz zwischen Links, Mitte, Rechts */
+      padding: 15px 25px;
+    }
+
+    /* Logo in der Mitte (absolut positioniert) */
+    .nav-logo {
+      position: absolute;
+      left: 50%; /* Mittig horizontal */
+      transform: translateX(-50%); /* Exakte Zentrierung */
+      text-align: center;
+    }
+
+    /* Logo-Text im Header */
+    .navbar .nav-logo .logo-text {
+      color: var(--white-color);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+      font-family: "Poppins", sans-serif;
+    }
+
+    /* Zurück-Button (Pfeil nach links) */
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Hover-Effekt für Zurück-Button */
+    .back-button:hover i {
+      color: #d0d0d0; /* Wird heller grau */
+    }
+
+    /* Icon im Zurück-Button */
+    .back-button .material-icons {
+      font-size: 32px;
+      color: var(--white-color);
+    }
+
+    /* ============================================
+       PAGE CONTENT - Hauptinhalt der Seite
+       ============================================ */
+    .page-content {
+      margin-top: 80px; /* Abstand zum fixierten Header */
+    }
+
+    /* ============================================
+       CONTAINER - Hauptcontainer für Formular & Liste
+       ============================================ */
+    .container {
+      max-width: 500px; /* Maximale Breite */
+      margin: 120px auto 40px auto; /* Zentriert mit Abstand oben/unten */
+      padding: 32px 24px;
+      text-align: center;
+      position: relative;
+      background: #fff; /* Weißer Hintergrund */
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1); /* Schatten für Tiefe */
+    }
+
+    /* ============================================
+       ÜBERSCHRIFT
+       ============================================ */
+    h4 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.3rem;
+    }
+
+    /* ============================================
+       MINDMAP FORMULAR - Input + Button
+       ============================================ */
+    .mindmap-form {
+      display: flex;
+      gap: 10px; /* Abstand zwischen Input und Button */
+      margin-bottom: 30px;
+    }
+
+    /* Input-Feld für Mindmap-Namen */
+    .mindmap-input {
+      flex: 1; /* Nimmt verfügbaren Platz ein */
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      font-size: 15px;
+      outline: none; /* Kein Standard-Outline */
+      transition: border 0.3s;
+    }
+
+    /* Focus-Effekt für Input (wenn angeklickt) */
+    .mindmap-input:focus {
+      border-color: var(--primary-color); /* Blauer Rand */
+      box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1); /* Blauer Leuchteffekt */
+    }
+
+    /* Speichern/Anlegen-Button */
+    .save-button {
+      background-color: #1153cf;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.3s ease, transform 0.2s;
+    }
+
+    /* Hover-Effekt für Speichern-Button */
+    .save-button:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px); /* Hebt sich leicht */
+    }
+
+    /* ============================================
+       MINDMAP LISTE - Übersicht aller Mindmaps
+       ============================================ */
+    .mindmap-list {
+      list-style: none; /* Keine Aufzählungszeichen */
+      padding: 0;
+      margin: 0;
+      width: 100%;
+    }
+
+    /* Einzelne Mindmap in der Liste */
+    .mindmap-list li {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; /* Name links, Löschen-Button rechts */
+      background: #f7f8fa; /* Hellgrauer Hintergrund */
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+    }
+
+    /* Hover-Effekt für Mindmap-Einträge */
+    .mindmap-list li:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08); /* Größerer Schatten */
+      transform: translateY(-2px); /* Hebt sich leicht */
+    }
+
+    /* ============================================
+       MINDMAP ITEM CONTENT - Icon + Name
+       ============================================ */
+    .mindmap-item-content {
+      flex: 1; /* Nimmt verfügbaren Platz ein */
+      display: flex;
+      align-items: center;
+      gap: 10px; /* Abstand zwischen Icon und Name */
+      text-align: left;
+    }
+
+    /* Icon für Mindmap (Baumstruktur-Symbol) */
+    .mindmap-item-content i {
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+
+    /* Mindmap-Name */
+    .mindmap-name {
+      color: #1153cf;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       DELETE BUTTON - Löschen-Button
+       ============================================ */
+    .delete-btn {
+      cursor: pointer;
+      color: #e53935; /* Rot */
+      font-size: 22px;
+      background: none;
+      border: none;
+      padding: 0 6px;
+      border-radius: 4px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Hover-Effekt für Löschen-Button */
+    .delete-btn:hover {
+      background: #ffeaea; /* Helles Rosa */
+    }
+
+    /* Icon im Löschen-Button */
+    .delete-btn .material-icons {
+      font-size: 22px;
+    }
+
+    /* ============================================
+       SWIPE OVERLAY - Für Touch-Gesten (aktuell ungenutzt)
+       ============================================ */
+    .swipe-overlay {
+      position: absolute;
+      inset: 0; /* Füllt gesamten Container */
+      pointer-events: none; /* Keine Klick-Interaktion */
+      display: flex;
+      justify-content: space-between; /* Links und rechts */
+      align-items: center;
+      padding: 20px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      opacity: 0; /* Standardmäßig unsichtbar */
+    }
+
+    /* Linkes Overlay (Rot - Lernen) */
+    .overlay-left {
+      color: #f44336;
+    }
+
+    /* Rechtes Overlay (Grün - Kann ich) */
+    .overlay-right {
+      color: #4caf50;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN - Mobile Ansicht
+       ============================================ */
+    @media (max-width: 768px) {
+      /* Schlankerer Header auf Tablets */
+      header .navbar {
+        padding: 4px 15px;
+      }
+
+      /* Kleinerer Logo-Text */
+      .logo-text {
+        font-size: 1.4rem;
+      }
+
+      /* Mehr Abstand zum Header */
+      .page-content {
+        margin-top: 100px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      /* Container passt sich an schmale Bildschirme an */
+      .container {
+        margin: 100px 15px; /* Weniger Rand links/rechts */
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       HEADER - Fixierte Navigation
+       ============================================ -->
+  <header>
+    <nav class="navbar">
+      <!-- Zurück-Button zur Startseite -->
+      <button class="back-button" onclick="window.location.href='index.html'">
+        <i class="material-icons">arrow_back</i>
+      </button>
+      
+      <!-- Logo/Titel in der Mitte -->
+      <div class="nav-logo">
+        <span class="logo-text">Mindmaps</span>
+      </div>
+      
+      <!-- Platzhalter für symmetrisches Layout -->
+      <div style="width: 40px;"></div>
+    </nav>
+  </header>
+  
+  <!-- Swipe-Overlay (aktuell nicht aktiv genutzt) -->
+  <div class="swipe-overlay">
+    <div class="overlay-left">✕ Lernen</div>
+    <div class="overlay-right">✓ Kann ich</div>
+  </div>
+  
+
+  <!-- ============================================
+       MAIN CONTENT - Mindmaps Übersicht
+       ============================================ -->
+  <main>
+    <div class="page-content">
+      <div class="container">
+        <!-- Überschrift -->
+        <h4>Neue Mindmap erstellen</h4>
+        
+        <!-- ============================================
+             FORMULAR - Neue Mindmap anlegen
+             ============================================ -->
+        <form class="mindmap-form" onsubmit="event.preventDefault(); addMindmap();">
+          <!-- Input-Feld für Mindmap-Namen -->
+          <input
+            type="text"
+            id="mindmapname"
+            placeholder="Name der Mindmap..."
+            autocomplete="off"
+            class="mindmap-input"
+          />
+          <!-- Anlegen-Button -->
+          <button type="submit" class="save-button">Anlegen</button>
+        </form>
+
+        <!-- ============================================
+             MINDMAP LISTE - Wird per JavaScript gefüllt
+             ============================================ -->
+        <ul class="mindmap-list" id="mindmaplist"></ul>
+      </div>
+    </div>
+  </main>
+
+  <!-- ============================================
+       FIREBASE - Backend-Dienste
+       ============================================ -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <!-- Auth-Protection Script (schützt Seite vor unauthentifizierten Zugriff) -->
+  <script src="auth-protect.js"></script>
+
+  <!-- ============================================
+       JAVASCRIPT LOGIK - Mindmap-Verwaltung
+       ============================================ -->
+  <script>
+    // ============================================
+    // FIREBASE KONFIGURATION
+    // ============================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyAcp47sENBIrAkQrnsQPiGZ9SOtympZwik",
+      authDomain: "eduflow-d032e.firebaseapp.com",
+      projectId: "eduflow-d032e",
+      storageBucket: "eduflow-d032e.appspot.com",
+      messagingSenderId: "431287771673",
+      appId: "1:431287771673:web:3c211b524455bdd3bc4088"
+    };
+    
+    // Firebase initialisieren (falls noch nicht initialisiert)
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    // ============================================
+    // KONSTANTEN
+    // ============================================
+    
+    // localStorage-Key für die Mindmaps-Liste
+    const storageKey = "mindmaps";
+
+    // ============================================
+    // INITIALISIERUNG - Beim Laden der Seite
+    // ============================================
+    
+    // Event-Listener: Lädt Mindmaps sobald DOM fertig geladen ist
+    document.addEventListener("DOMContentLoaded", loadMindmaps);
+
+    // ============================================
+    // MINDMAPS LADEN - Aus localStorage
+    // ============================================
+    
+    /**
+     * Lädt alle Mindmaps aus localStorage und zeigt sie an
+     */
+    function loadMindmaps() {
+      // Mindmaps aus localStorage laden (oder leeres Array falls nichts vorhanden)
+      let maps = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      // Liste-Element aus DOM holen
+      const list = document.getElementById("mindmaplist");
+      list.innerHTML = ""; // Liste leeren
+
+      // ============================================
+      // Für jede Mindmap einen Listeneintrag erstellen
+      // ============================================
+      maps.forEach(name => {
+        // <li> Element erstellen
+        const li = document.createElement("li");
+
+        // ============================================
+        // CONTENT - Icon + Name (klickbar)
+        // ============================================
+        const content = document.createElement("div");
+        content.className = "mindmap-item-content";
+        // Onclick: Öffnet den Mindmap-Editor mit dieser Mindmap
+        content.onclick = () => {
+          window.location.href = `mindmapeditor.html?name=${encodeURIComponent(name)}`;
+        };
+
+        // Icon erstellen (Baumstruktur-Symbol)
+        const icon = document.createElement("i");
+        icon.className = "material-icons";
+        icon.textContent = "account_tree"; // Material Icon: Baumstruktur
+
+        // Name-Span erstellen
+        const nameSpan = document.createElement("span");
+        nameSpan.className = "mindmap-name";
+        nameSpan.textContent = name;
+
+        // Icon und Name zum Content hinzufügen
+        content.appendChild(icon);
+        content.appendChild(nameSpan);
+
+        // ============================================
+        // DELETE BUTTON - Löschen-Button
+        // ============================================
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "delete-btn";
+        deleteBtn.innerHTML = '<span class="material-icons">delete</span>';
+        // Onclick: Löscht die Mindmap (mit Bestätigung)
+        deleteBtn.onclick = (e) => {
+          e.stopPropagation(); // Verhindert dass auch der li-onclick ausgelöst wird
+          deleteMindmap(name);
+        };
+
+        // Content und Delete-Button zum <li> hinzufügen
+        li.appendChild(content);
+        li.appendChild(deleteBtn);
+        
+        // <li> zur Liste hinzufügen
+        list.appendChild(li);
+      });
+    }
+
+    // ============================================
+    // MINDMAP HINZUFÜGEN - Neue Mindmap erstellen
+    // ============================================
+    
+    /**
+     * Erstellt eine neue Mindmap und speichert sie in localStorage
+     */
+    function addMindmap() {
+      // Input-Feld auslesen
+      const input = document.getElementById("mindmapname");
+      const name = input.value.trim(); // Leerzeichen entfernen
+      
+      // Abbrechen wenn leer
+      if (!name) return;
+
+      // Bestehende Mindmaps laden
+      let maps = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      // Prüfen ob Name bereits existiert
+      if (maps.includes(name)) {
+        alert("Eine Mindmap mit diesem Namen existiert bereits.");
+        return; // Abbrechen
+      }
+
+      // Neue Mindmap zur Liste hinzufügen
+      maps.push(name);
+      // In localStorage speichern
+      localStorage.setItem(storageKey, JSON.stringify(maps));
+
+      // Input-Feld leeren
+      input.value = "";
+      
+      // Liste neu rendern
+      loadMindmaps();
+    }
+
+    // ============================================
+    // MINDMAP LÖSCHEN - Mit Bestätigung
+    // ============================================
+    
+    /**
+     * Löscht eine Mindmap nach Bestätigung
+     * @param {string} name - Name der zu löschenden Mindmap
+     */
+    function deleteMindmap(name) {
+      // Bestätigung vom Benutzer einholen
+      if (!confirm(`Mindmap "${name}" wirklich löschen?`)) return;
+      
+      // Mindmaps-Liste aus localStorage laden
+      let maps = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      // Mindmap aus Liste entfernen (filter = behält alle außer der zu löschenden)
+      maps = maps.filter(m => m !== name);
+      
+      // Aktualisierte Liste speichern
+      localStorage.setItem(storageKey, JSON.stringify(maps));
+      
+      // Auch die Daten der Mindmap selbst löschen
+      localStorage.removeItem(`mindmap_${name}`);
+      
+      // Liste neu rendern
+      loadMindmaps();
+    }
+    
+    // ============================================
+    // UPDATE OVERLAY - Für Swipe-Gesten (aktuell ungenutzt)
+    // ============================================
+    
+    /**
+     * Aktualisiert das Swipe-Overlay basierend auf der Swipe-Richtung
+     * @param {number} deltaX - Horizontale Distanz des Swipes
+     */
+    function updateOverlay(deltaX) {
+      // DOM-Elemente holen
+      const overlay = document.querySelector(".swipe-overlay");
+      const left = overlay.querySelector(".overlay-left");
+      const right = overlay.querySelector(".overlay-right");
+
+      // Overlay-Opacity basierend auf Swipe-Distanz (max 1)
+      overlay.style.opacity = Math.min(Math.abs(deltaX) / 120, 1);
+
+      if (deltaX < 0) {
+        // Nach links swipen → Rotes Overlay (Lernen)
+        left.style.opacity = 1;
+        right.style.opacity = 0;
+      } else {
+        // Nach rechts swipen → Grünes Overlay (Kann ich)
+        left.style.opacity = 0;
+        right.style.opacity = 1;
+      }
+    }
+
+  </script>
+</body>
+</html>

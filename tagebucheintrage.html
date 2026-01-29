@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tagebucheinträge</title>
+
+<!-- ============================================
+     EXTERNAL RESOURCES - Fonts & Icons
+     ============================================ -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
+<link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" />
+<script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+<style>
+    /* ============================================
+       CSS VARIABLEN - Globale Design-Tokens
+       ============================================ */
+    :root {
+      /* Farben */
+      --white-color: #FFFFFF;
+      --dark-color: #000000;
+      --primary-color: #106cc2;
+      --secondary-color: #1153cf;
+      --background-color: #0c3b99;
+      --background-light: #f0f2f7;
+      
+      /* Schriftgrößen */
+      --font-size-s: 0.9rem;
+      --font-size-n: 1rem;
+      --font-size-m: 1.12rem;
+      --font-size-l: 1.5rem;
+      --font-size-xl: 2rem;
+      
+      /* Schriftgewichte */
+      --font-weight-normal: 400;
+      --font-weight-medium: 500;  
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+    }
+
+    /* ============================================
+       GLOBAL RESET
+       ============================================ */
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--background-light);
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ============================================
+       HEADER - Einheitlicher Header
+       ============================================ */
+    /* Fixierter Header oben */
+    header {
+      position: fixed;
+      width: 100%;
+      z-index: 5;
+      background: var(--background-color);
+      top: 0;
+      left: 0;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    }
+
+    /* Navbar Layout */
+    header .navbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 25px;
+    }
+
+    /* Logo zentriert */
+    .nav-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    /* Logo-Text */
+    .navbar .logo-text {
+      color: var(--white-color);
+      font-size: var(--font-size-xl);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    /* Zurück-Button */
+    .back-button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .back-button:hover i {
+      color: #d0d0d0;
+    }
+
+    .back-button .material-icons {
+      font-size: 32px;
+      color: var(--white-color);
+    }
+
+    /* ============================================
+       PAGE CONTENT
+       ============================================ */
+    .page-content {
+      margin-top: 80px;
+    }
+
+    /* ============================================
+       CONTAINER - Hauptcontainer
+       ============================================ */
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 32px 24px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* ============================================
+       ÜBERSCHRIFT
+       ============================================ */
+    h4 {
+      margin-bottom: 20px;
+      color: var(--primary-color);
+      font-weight: 600;
+      font-size: 1.3rem;
+      text-align: center;
+    }
+
+    /* ============================================
+       FORMULAR - Neuer Eintrag
+       ============================================ */
+    /* Formular-Container */
+    .entry-form {
+      margin-bottom: 30px;
+    }
+
+    /* Textarea für Eintrag */
+    textarea {
+      width: 100%;
+      height: 150px;
+      resize: vertical;
+      font-size: 1rem;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 2px solid #ccc;
+      box-sizing: border-box;
+      font-family: inherit;
+      outline: none;
+      transition: border 0.3s;
+      margin-bottom: 12px;
+    }
+
+    /* Focus-Effekt für Textarea */
+    textarea:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1);
+    }
+
+    /* Speichern-Button */
+    .save-button {
+      background-color: #1153cf;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      transition: background 0.3s ease, transform 0.2s;
+      width: 100%;
+      font-size: 1rem;
+    }
+
+    .save-button:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+    }
+
+    /* MDL Button Override (falls verwendet) */
+    .mdl-button {
+      background-color: var(--primary-color) !important;
+      color: white !important;
+      font-weight: 500;
+    }
+
+    /* ============================================
+       EINTRÄGE LISTE
+       ============================================ */
+    /* Container für alle Einträge */
+    .entry-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    /* Trennlinie mit Text */
+    .entries-divider {
+      text-align: center;
+      margin: 30px 0 20px;
+      position: relative;
+      color: #666;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .entries-divider::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      width: 100%;
+      height: 1px;
+      background: #e0e0e0;
+      z-index: 0;
+    }
+
+    .entries-divider span {
+      background: #fff;
+      padding: 0 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Einzelner Eintrag */
+    .entry-item {
+      background: #f7f8fa;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .entry-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    /* Datum des Eintrags */
+    .entry-date {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 10px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .entry-date i {
+      font-size: 16px;
+      color: var(--primary-color);
+    }
+
+    /* Text des Eintrags */
+    .entry-text {
+      font-size: 1rem;
+      color: #333;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      padding-right: 30px; /* Platz für Delete-Button */
+    }
+
+    /* Löschen-Button */
+    .delete-btn {
+      cursor: pointer;
+      color: #e53935;
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      transition: all 0.2s ease;
+      background: none;
+      border: none;
+      padding: 4px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+
+    .delete-btn:hover {
+      background: #ffeaea;
+      transform: scale(1.1);
+    }
+
+    .delete-btn .material-icons {
+      font-size: 20px;
+    }
+
+    /* Leere Liste Nachricht */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #999;
+      font-style: italic;
+    }
+
+    .empty-state i {
+      font-size: 48px;
+      color: #ddd;
+      margin-bottom: 10px;
+    }
+
+    /* ============================================
+       RESPONSIVE DESIGN
+       ============================================ */
+    @media (max-width: 768px) {
+      header .navbar {
+        padding: 4px 15px;
+      }
+      
+      .logo-text {
+        font-size: 1.4rem !important;
+      }
+      
+      .container {
+        margin: 20px 15px;
+        padding: 24px 16px;
+      }
+
+      textarea {
+        height: 120px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .entry-text {
+        font-size: 0.95rem;
+      }
+    }
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     HEADER - Fixierte Navigation
+     ============================================ -->
+<header>
+  <nav class="navbar">
+    <!-- Zurück-Button zur Tagebücher-Übersicht -->
+    <button class="back-button" onclick="window.location.href='tagebuch.html'" title="Zurück zur Übersicht">
+      <i class="material-icons">arrow_back</i>
+    </button>
+    
+    <!-- Logo/Titel in der Mitte (wird per JavaScript befüllt) -->
+    <div class="nav-logo">
+      <span class="logo-text" id="diary-title">Tagebucheinträge</span>
+    </div>
+    
+    <!-- Platzhalter für symmetrisches Layout -->
+    <div style="width: 40px;"></div>
+  </nav>
+</header>
+
+<!-- ============================================
+     MAIN CONTENT
+     ============================================ -->
+<main>
+  <div class="page-content">
+    <div class="container">
+      
+      <!-- Überschrift -->
+      <h4>Neuer Eintrag</h4>
+      
+      <!-- ============================================
+           FORMULAR - Neuen Eintrag erstellen
+           ============================================ -->
+      <form class="entry-form" onsubmit="event.preventDefault(); addEntry();">
+        <!-- Textarea für Eintrag -->
+        <textarea 
+          id="entryfield" 
+          placeholder="Was ist heute passiert? Schreibe deine Gedanken hier auf..."
+          required
+        ></textarea>
+        
+        <!-- Speichern-Button -->
+        <button type="submit" class="save-button">
+          Eintrag speichern
+        </button>
+      </form>
+      
+      <!-- Trennlinie mit Text -->
+      <div class="entries-divider">
+        <span>Meine Einträge</span>
+      </div>
+      
+      <!-- ============================================
+           EINTRÄGE LISTE - Wird per JavaScript gefüllt
+           ============================================ -->
+      <div class="entry-list" id="entrylist"></div>
+      
+    </div>
+  </div>
+</main>
+
+<!-- ============================================
+     JAVASCRIPT LOGIK
+     ============================================ -->
+<script>
+    // ============================================
+    // INITIALISIERUNG & KONSTANTEN
+    // ============================================
+    
+    /* URL-Parameter auslesen: Welches Tagebuch wird angezeigt? */
+    const params = new URLSearchParams(window.location.search);
+    const diaryName = params.get('name') || 'default';
+    
+    /* localStorage-Key für die Einträge dieses Tagebuchs */
+    const storageKey = `eintraege_${diaryName}`;
+
+    /* Titel im Header setzen */
+    document.getElementById("diary-title").textContent = diaryName;
+
+    /* Einträge beim Laden der Seite laden */
+    document.addEventListener("DOMContentLoaded", loadEntries);
+
+    // ============================================
+    // EINTRÄGE LADEN
+    // ============================================
+    
+    /**
+     * Lädt alle Einträge aus localStorage und zeigt sie an
+     */
+    function loadEntries() {
+      // Einträge aus localStorage laden (oder leeres Array)
+      const entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+      
+      const container = document.getElementById("entrylist");
+      container.innerHTML = ""; // Liste leeren
+
+      // Wenn keine Einträge vorhanden: Leere-Nachricht anzeigen
+      if (entries.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="material-icons">menu_book</i>
+            <p>Noch keine Einträge vorhanden.<br>Schreibe deinen ersten Eintrag oben!</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Einträge in umgekehrter Reihenfolge anzeigen (neueste zuerst)
+      entries.slice().reverse().forEach(entry => {
+        addEntryElement(entry);
+      });
+    }
+
+    // ============================================
+    // EINTRAG HINZUFÜGEN
+    // ============================================
+    
+    /**
+     * Erstellt einen neuen Tagebucheintrag und speichert ihn
+     */
+    function addEntry() {
+      const textarea = document.getElementById("entryfield");
+      const text = textarea.value.trim();
+
+      // Abbrechen wenn leer
+      if (!text) return;
+
+      // Neues Eintrag-Objekt erstellen
+      const newEntry = {
+        id: Date.now(), // Eindeutige ID basierend auf Zeitstempel
+        text,
+        date: new Date().toISOString() // ISO-Format für konsistente Datumspeicherung
+      };
+
+      // Eintrag zur Anzeige hinzufügen (wird vorne eingefügt)
+      addEntryElement(newEntry, true);
+
+      // In localStorage speichern
+      let entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+      entries.push(newEntry);
+      localStorage.setItem(storageKey, JSON.stringify(entries));
+
+      // Textarea leeren
+      textarea.value = "";
+    }
+
+    // ============================================
+    // EINTRAG-ELEMENT ERSTELLEN
+    // ============================================
+    
+    /**
+     * Erstellt ein DOM-Element für einen Eintrag
+     * @param {Object} entry - Das Eintrag-Objekt
+     * @param {boolean} prepend - Ob der Eintrag am Anfang eingefügt werden soll
+     */
+    function addEntryElement(entry, prepend = false) {
+      const container = document.getElementById("entrylist");
+      
+      // Leere-Nachricht entfernen falls vorhanden
+      const emptyState = container.querySelector('.empty-state');
+      if (emptyState) {
+        emptyState.remove();
+      }
+
+      // Eintrag-Container erstellen
+      const div = document.createElement("div");
+      div.className = "entry-item";
+
+      // Datum formatieren (z.B. "29.01.2026, 14:30")
+      const dateObj = new Date(entry.date);
+      const dateStr = dateObj.toLocaleString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+      // HTML-Struktur erstellen
+      div.innerHTML = `
+        <div class="entry-date">
+          <i class="material-icons">calendar_today</i>
+          ${dateStr}
+        </div>
+        <div class="entry-text">${escapeHtml(entry.text)}</div>
+        <button class="delete-btn" title="Eintrag löschen">
+          <i class="material-icons">delete</i>
+        </button>
+      `;
+
+      // Event-Listener für Löschen-Button
+      div.querySelector(".delete-btn").addEventListener("click", () => {
+        deleteEntry(entry.id, div);
+      });
+
+      // Eintrag zur Liste hinzufügen (vorne oder hinten)
+      if (prepend) {
+        container.prepend(div); // Neueste Einträge oben
+      } else {
+        container.appendChild(div);
+      }
+    }
+
+    // ============================================
+    // EINTRAG LÖSCHEN
+    // ============================================
+    
+    /**
+     * Löscht einen Eintrag nach Bestätigung
+     * @param {number} id - ID des zu löschenden Eintrags
+     * @param {HTMLElement} elem - DOM-Element des Eintrags
+     */
+    function deleteEntry(id, elem) {
+      // Bestätigung einholen
+      if (!confirm('Möchtest du diesen Eintrag wirklich löschen?')) return;
+
+      // Aus localStorage entfernen
+      let entries = JSON.parse(localStorage.getItem(storageKey)) || [];
+      entries = entries.filter(e => e.id !== id);
+      localStorage.setItem(storageKey, JSON.stringify(entries));
+
+      // Aus DOM entfernen
+      elem.remove();
+
+      // Wenn keine Einträge mehr: Leere-Nachricht anzeigen
+      const container = document.getElementById("entrylist");
+      if (container.children.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="material-icons">menu_book</i>
+            <p>Noch keine Einträge vorhanden.<br>Schreibe deinen ersten Eintrag oben!</p>
+          </div>
+        `;
+      }
+    }
+
+    // ============================================
+    // HILFSFUNKTIONEN
+    // ============================================
+    
+    /**
+     * Escaped HTML-Zeichen um XSS zu verhindern
+     * @param {string} text - Der zu escapende Text
+     * @returns {string} Escaped Text
+     */
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      // Escape HTML und ersetze Zeilenumbrüche durch <br>
+      return text
+        .replace(/[&<>"']/g, m => map[m])
+        .replace(/\n/g, '<br>');
+    }
+</script>
+
+<!-- Auth-Protection Script (falls vorhanden) -->
+<script src="auth-protect.js"></script>
+
+</body>
+</html>

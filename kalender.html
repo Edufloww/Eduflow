@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalender</title>
+
+    <!-- Material Design Icons von Google -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <!-- Material Design Lite CSS Framework -->
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css" />
+    <!-- Material Design Lite JavaScript -->
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+    <!-- Firebase SDKs (werden für zukünftige Features bereitgehalten) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <style>
+      /* ============================================
+         EVENT DIALOG STYLING - Modernes Popup-Design
+         ============================================ */
+      
+      /* Dialog Grundstil - fixiert und zentriert */
+      #eventDialog {
+        border: none; /* Kein Standard-Dialogrand */
+        border-radius: 16px; /* Abgerundete Ecken */
+        padding: 0; /* Kein Padding (wird in Unterelementen definiert) */
+        max-width: 500px; /* Maximale Breite */
+        width: 90%; /* 90% der Bildschirmbreite auf kleinen Geräten */
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); /* Starker Schatten */
+        position: fixed; /* Fixiert im Viewport */
+        top: 50%; /* Vertikal zentriert */
+        left: 50%; /* Horizontal zentriert */
+        transform: translate(-50%, -50%); /* Exakte Zentrierung */
+        margin: 0;
+      }
+
+      /* Backdrop - Hintergrund wenn Dialog offen */
+      #eventDialog::backdrop {
+        background: rgba(0, 0, 0, 0.6); /* Halbtransparenter schwarzer Hintergrund */
+        backdrop-filter: blur(4px); /* Unschärfe-Effekt */
+      }
+
+      /* Dialog-Header (oberer blauer Bereich) */
+      .dialog-header {
+        background: linear-gradient(135deg, #1153cf 0%, #106cc2 100%); /* Blauer Gradient */
+        color: white;
+        padding: 24px;
+        border-radius: 16px 16px 0 0; /* Nur oben abgerundet */
+        display: flex;
+        align-items: center;
+        gap: 12px; /* Abstand zwischen Icon und Text */
+      }
+
+      /* Icon im Dialog-Header */
+      .dialog-header i {
+        font-size: 28px;
+      }
+
+      /* Überschrift im Dialog-Header */
+      .dialog-header h4 {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+      }
+
+      /* Dialog-Body (Hauptinhalt des Dialogs) */
+      .dialog-body {
+        padding: 24px;
+        background: white;
+      }
+
+      /* ============================================
+         EVENTS LIST - Liste vorhandener Events
+         ============================================ */
+      
+      /* Container für Events-Liste */
+      #eventsList {
+        max-height: 180px; /* Maximale Höhe mit Scrollbar */
+        overflow-y: auto; /* Scrollbar wenn Inhalt zu lang */
+        border: 2px solid #e0e0e0;
+        padding: 8px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        background: #fafafa; /* Heller grauer Hintergrund */
+      }
+
+      /* Liste verstecken wenn leer */
+      #eventsList:empty {
+        display: none;
+      }
+
+      /* Einzelnes Event in der Liste */
+      #eventsList div {
+        display: flex;
+        justify-content: space-between; /* Text links, Button rechts */
+        align-items: center;
+        margin-bottom: 8px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s; /* Sanfte Übergänge */
+      }
+
+      /* Hover-Effekt für Event-Einträge */
+      #eventsList div:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Größerer Schatten */
+        transform: translateX(4px); /* Leichte Bewegung nach rechts */
+      }
+
+      /* Event-Text Container */
+      #eventsList div span {
+        font-size: 14px;
+        overflow-wrap: anywhere; /* Text umbricht bei langen Wörtern */
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Abstand zwischen Punkt und Text */
+      }
+
+      /* Löschen-Button für einzelne Events */
+      #eventsList div button {
+        background: #ffebee; /* Helles Rosa */
+        border: none;
+        color: #e53935; /* Rote Schrift */
+        cursor: pointer;
+        font-size: 18px;
+        padding: 6px 10px;
+        line-height: 1;
+        border-radius: 6px;
+        transition: all 0.2s;
+      }
+
+      /* Hover-Effekt für Löschen-Button */
+      #eventsList div button:hover {
+        background: #e53935; /* Wird komplett rot */
+        color: white; /* Weiße Schrift */
+        transform: scale(1.1); /* Leicht vergrößert */
+      }
+
+      /* ============================================
+         FORM STYLING - Formularelemente
+         ============================================ */
+      
+      /* Formular-Gruppe (Label + Input Container) */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      /* Label für Formularfelder */
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+      }
+
+      /* Text-Inputs und Select-Felder */
+      .form-group input[type="text"],
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: "Poppins", sans-serif;
+        transition: all 0.3s;
+        background: white;
+      }
+
+      /* Focus-Effekt für Inputs (wenn angeklickt) */
+      .form-group input[type="text"]:focus,
+      .form-group select:focus {
+        outline: none; /* Standard-Outline entfernen */
+        border-color: #1153cf; /* Blauer Rand */
+        box-shadow: 0 0 0 3px rgba(17, 83, 207, 0.1); /* Blauer Leuchteffekt */
+      }
+
+      /* ============================================
+         CHECKBOX STYLING - Wöchentliche Wiederholung
+         ============================================ */
+      
+      /* Container für Checkbox + Label */
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        background: #f5f5f5; /* Hellgrauer Hintergrund */
+        border-radius: 10px;
+        margin-bottom: 20px;
+        cursor: pointer; /* Gesamter Bereich ist klickbar */
+        transition: all 0.2s;
+      }
+
+      /* Hover-Effekt für Checkbox-Container */
+      .checkbox-group:hover {
+        background: #eeeeee; /* Wird etwas dunkler */
+      }
+
+      /* Die Checkbox selbst */
+      .checkbox-group input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+        accent-color: #1153cf; /* Farbe wenn angekreuzt */
+      }
+
+      /* Label neben der Checkbox */
+      .checkbox-group label {
+        cursor: pointer;
+        font-size: 15px;
+        user-select: none; /* Text kann nicht markiert werden */
+        flex: 1; /* Nimmt verfügbaren Platz ein */
+      }
+
+      /* ============================================
+         BUTTON STYLING - Dialog Action-Buttons
+         ============================================ */
+      
+      /* Container für Action-Buttons */
+      .dialog-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between; /* Platz zwischen links und rechts */
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 2px solid #f0f0f0; /* Trennlinie oben */
+      }
+
+      /* Basis-Stil für alle Buttons */
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-family: "Poppins", sans-serif;
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Abstand zwischen Icon und Text */
+      }
+
+      /* Primary Button (Grün - Hinzufügen) */
+      .btn-primary {
+        background: linear-gradient(135deg, #4caf50 0%, #43a047 100%); /* Grüner Gradient */
+        color: white;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+      }
+
+      /* Hover-Effekt für Primary Button */
+      .btn-primary:hover {
+        transform: translateY(-2px); /* Hebt sich leicht */
+        box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4); /* Größerer Schatten */
+      }
+
+      /* Secondary Button (Grau - Abbrechen) */
+      .btn-secondary {
+        background: #f5f5f5;
+        color: #666;
+      }
+
+      /* Hover-Effekt für Secondary Button */
+      .btn-secondary:hover {
+        background: #e0e0e0;
+      }
+
+      /* Save Button (Blau - Speichern) */
+      .btn-save {
+        background: linear-gradient(135deg, #1153cf 0%, #106cc2 100%); /* Blauer Gradient */
+        color: white;
+        box-shadow: 0 4px 12px rgba(17, 83, 207, 0.3);
+      }
+
+      /* Hover-Effekt für Save Button */
+      .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(17, 83, 207, 0.4);
+      }
+
+      /* Container für rechts ausgerichtete Buttons */
+      .action-right {
+        display: flex;
+        gap: 10px;
+      }
+
+      /* ============================================
+         GLOBAL STYLES - Schriftarten und CSS-Variablen
+         ============================================ */
+      
+      /* Poppins und Miniver Schriftarten importieren */
+      @import url('https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:wght@400;500;600;700&display=swap');
+
+      /* CSS Custom Properties (Variablen) */
+      :root {
+        --white-color: #ffffff;
+        --primary-color: #1153cf;
+        --secondary-color: #106cc2;
+        --background-light: #f0f2f7;
+        --font-family-main: "Poppins", sans-serif;
+        --font-family-title: "Miniver", cursive;
+        
+        /* Schriftgrößen */
+        --font-size-s: 0.9rem;
+        --font-size-n: 1rem;
+        --font-size-m: 1.12rem;
+        --font-size-l: 1.5rem;
+        --font-size-xl: 2rem;
+        --font-size-xxl: 2.3rem;
+        
+        /* Border Radius Werte */
+        --border-radius-s: 8px;
+        --border-radius-m: 30px;
+        --border-radius-circle: 50%;
+        
+        /* Maximale Seitenbreite */
+        --site-max-width: 1300px;
+      }
+
+      /* Reset für alle Elemente */
+      * { 
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; /* Padding/Border in width einrechnen */
+        font-family: var(--font-family-main); 
+      }
+
+      /* Body Grundstil */
+      body {
+        background-color: var(--background-light);
+        min-height: 100vh; /* Mindestens Vollbild-Höhe */
+        padding-top: 80px; /* Platz für fixierten Header */
+      }
+
+      /* ============================================
+         HEADER STYLING - Fixierte Navigation
+         ============================================ */
+      
+      /* Header (bleibt oben fixiert beim Scrollen) */
+      header {
+        position: fixed; /* Bleibt beim Scrollen oben */
+        width: 100%;
+        z-index: 5; /* Liegt über anderen Elementen */
+        background: #0c3b99; /* Dunkelblaue Farbe */
+        top: 0;
+        left: 0;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      }
+
+      /* Navbar Container */
+      header .navbar {
+        display: flex;
+        align-items: center;
+        padding: 15px 25px;
+        justify-content: space-between; /* Platz zwischen Links, Mitte, Rechts */
+      }
+
+      /* Logo-Text im Header */
+      .navbar .nav-logo .logo-text {
+        color: #ffffff;
+        font-size: 2rem;
+        font-weight: 600;
+        font-family: "Poppins", sans-serif;
+      }
+
+      /* Zurück-Button (Pfeil nach links) */
+      .back-button {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 28px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      /* Hover-Effekt für Zurück-Button */
+      .back-button:hover i {
+        color: #d0d0d0; /* Wird heller grau */
+      }
+
+      /* ============================================
+         PAGE CONTENT - Hauptinhalt der Seite
+         ============================================ */
+      
+      /* Container für den Seiteninhalt */
+      .page-content { 
+        padding: 40px 20px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; /* Zentriert den Kalender */
+      }
+      
+      /* Kalender Container */
+      .calendar { 
+        width: 100%; 
+        max-width: 600px; /* Maximale Breite */
+      }
+
+      /* ============================================
+         CALENDAR HEADER - Monat/Jahr Navigation
+         ============================================ */
+      
+      /* Header mit Monat/Jahr und Vor/Zurück-Buttons */
+      .calendar-header { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 10px; 
+      }
+
+      /* WICHTIG: Monat/Jahr Überschrift - WAR IN DATEI 2 FEHLEND! */
+      .calendar-header h5 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+      }
+
+      /* WICHTIG: Navigation Buttons (< und >) - WAR IN DATEI 2 FEHLEND! */
+      .calendar-header .mdl-button {
+        font-size: 2rem;
+        min-width: 48px;
+        padding: 8px 16px;
+        background: #e8eaf6;
+        color: #3f51b5;
+        font-weight: bold;
+        border-radius: 8px;
+        transition: all 0.2s;
+      }
+
+      .calendar-header .mdl-button:hover {
+        background: #c5cae9;
+        transform: scale(1.1);
+      }
+
+      /* ============================================
+         CALENDAR GRID - Tage und Daten
+         ============================================ */
+      
+      /* Grid-Layout (7 Spalten für 7 Wochentage) */
+      .calendar-grid { 
+        display: grid; 
+        grid-template-columns: repeat(7, 1fr); /* 7 gleich breite Spalten */
+        gap: 5px; 
+      }
+      
+      /* Basis-Stil für Tag-Header und Datumszellen */
+      .calendar-day, .calendar-date { 
+        text-align: center; 
+        padding: 10px; 
+        border-radius: 5px; 
+      }
+      
+      /* Wochentags-Zeile (Mo, Di, Mi, ...) */
+      .calendar-day { 
+        font-weight: bold; 
+        background: #f0f0f0; 
+      }
+      
+      /* Einzelne Datumszelle */
+      .calendar-date { 
+        background-color: #e8eaf6; /* Hellblau */
+        cursor: pointer;
+        transition: background 0.2s;
+        position: relative;
+        min-height: 50px; /* Mindesthöhe für Event-Dots */
+        user-select: none; /* Text kann nicht markiert werden */
+        display: flex;
+        flex-direction: column; /* Nummer oben, Dots unten */
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      /* Hover-Effekt für Datumszellen */
+      .calendar-date:hover { 
+        background-color: #c5cae9; /* Dunkler beim Hovern */
+      }
+      
+      /* Heutiges Datum hervorheben */
+      .calendar-date.today { 
+        background-color: #ffcc80; /* Orange */
+        border: 2px solid #fb8c00; /* Orangener Rand */
+      }
+      
+      /* Datumsnummer in der Zelle */
+      .calendar-date-number { 
+        font-weight: bold; 
+        margin-bottom: auto; /* Schiebt sich nach oben */
+      }
+      
+      /* Container für Event-Indikatoren (farbige Punkte) */
+      .event-indicators { 
+        display: flex; 
+        justify-content: center; 
+        gap: 2px; 
+        margin-top: 4px; 
+        flex-wrap: wrap; /* Umbricht bei zu vielen Dots */
+        max-width: 100%; 
+      }
+      
+      /* Einzelner Event-Punkt */
+      .event-dot { 
+        width: 6px; 
+        height: 6px; 
+        border-radius: 50%; /* Rund */
+        display: inline-block; 
+        margin: 1px; 
+        flex-shrink: 0; 
+      }
+
+      /* ============================================
+         COUNTDOWN - Nächstes Event anzeigen
+         ============================================ */
+      
+      /* Countdown-Anzeige unter dem Kalender */
+      .countdown { 
+        margin-top: 20px; 
+        font-size: 18px; 
+        color: #d32f2f; /* Rote Schrift */
+      }
+
+      /* ============================================
+         DELETE DIALOG - Bestätigungs-Popup
+         ============================================ */
+      
+      /* Overlay für den Lösch-Dialog */
+      .delete-dialog { 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100%; 
+        background: rgba(0, 0, 0, 0.5); /* Halbtransparent schwarz */
+        display: none; /* Standardmäßig versteckt */
+        align-items: center; 
+        justify-content: center; 
+        z-index: 1000; 
+        backdrop-filter: blur(3px); /* Unschärfe im Hintergrund */
+      }
+      
+      /* Dialog wird angezeigt */
+      .delete-dialog.show { 
+        display: flex; 
+      }
+      
+      /* Inhalt des Lösch-Dialogs */
+      .delete-dialog-content { 
+        background: white; 
+        border-radius: 12px; 
+        padding: 24px; 
+        max-width: 420px; 
+        margin: 20px; 
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); 
+        animation: dialogSlideIn 0.3s ease-out; /* Einfahr-Animation */
+      }
+      
+      /* Animation: Dialog gleitet von oben ein */
+      @keyframes dialogSlideIn { 
+        from { transform: translateY(-30px); opacity: 0; } 
+        to { transform: translateY(0); opacity: 1; } 
+      }
+      
+      /* Titel des Lösch-Dialogs */
+      .delete-dialog-title { 
+        font-size: 20px; 
+        font-weight: 600; 
+        color: #333; 
+        margin-bottom: 8px; 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+      }
+      
+      /* Untertitel (Event-Name) */
+      .delete-dialog-subtitle { 
+        font-size: 16px; 
+        color: #666; 
+        margin-bottom: 20px; 
+      }
+      
+      /* Beschreibungstext im Dialog */
+      .delete-dialog-description { 
+        font-size: 14px; 
+        color: #666; 
+        line-height: 1.5; 
+        margin-bottom: 24px; 
+      }
+      
+      /* Container für die Dialog-Buttons */
+      .delete-dialog-buttons { 
+        display: flex; 
+        gap: 12px; 
+        justify-content: flex-end; /* Rechts ausgerichtet */
+      }
+      
+      /* Basis-Stil für Dialog-Buttons */
+      .delete-dialog-button { 
+        padding: 10px 20px; 
+        border: none; 
+        border-radius: 6px; 
+        font-size: 14px; 
+        font-weight: 500; 
+        cursor: pointer; 
+        transition: all 0.2s; 
+      }
+      
+      /* Abbrechen-Button (Grau) */
+      .delete-dialog-button.cancel { 
+        background: #f5f5f5; 
+        color: #666; 
+      }
+      .delete-dialog-button.cancel:hover { 
+        background: #e0e0e0; 
+      }
+      
+      /* "Nur dieses löschen"-Button (Blau) */
+      .delete-dialog-button.delete-single { 
+        background: #2196f3; 
+        color: white; 
+      }
+      .delete-dialog-button.delete-single:hover { 
+        background: #1976d2; 
+      }
+      
+      /* "Alle löschen"-Button (Rot) */
+      .delete-dialog-button.delete-all { 
+        background: #f44336; 
+        color: white; 
+      }
+      .delete-dialog-button.delete-all:hover { 
+        background: #d32f2f; 
+      }
+      
+      /* Warnungs-Icon im Dialog */
+      .warning-icon { 
+        color: #ff9800; /* Orange */
+        font-size: 24px; 
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Material Design Layout Container -->
+    <div class="mdl-layout mdl-js-layout mdl-layout--fixed-header">
+      
+      <!-- ============================================
+           HEADER - Fixierte Navigation
+           ============================================ -->
+      <header>
+        <nav class="navbar">
+          <!-- Zurück-Button zur Startseite -->
+          <button class="back-button" onclick="window.location.href='index.html'">
+            <i class="material-icons">arrow_back</i>
+          </button>
+          
+          <!-- Logo/Titel in der Mitte -->
+          <div class="nav-logo">
+            <span class="logo-text">Kalender</span>
+          </div>
+          
+          <!-- Platzhalter für symmetrisches Layout -->
+          <div style="width: 40px;"></div>
+        </nav>
+      </header>
+      
+      <!-- ============================================
+           MAIN CONTENT - Kalender und Legende
+           ============================================ -->
+      <main class="mdl-layout__content">
+        <div class="page-content">
+          <div class="calendar">
+            
+            <!-- ============================================
+                 FARBLEGENDE - Event-Typ Erklärung
+                 ============================================ -->
+            <div style="margin-bottom: 20px; display: flex; gap: 15px; flex-wrap: wrap;">
+              <!-- Standard Events (Blau) -->
+              <span>
+                <span style="display:inline-block;width:12px;height:12px;background:#7986cb;margin-right:5px;border-radius:2px;"></span>Standard
+              </span>
+              <!-- Wichtige Events (Rot) -->
+              <span>
+                <span style="display:inline-block;width:12px;height:12px;background:#e53935;margin-right:5px;border-radius:2px;"></span>Wichtig
+              </span>
+              <!-- Prüfungen (Grün) -->
+              <span>
+                <span style="display:inline-block;width:12px;height:12px;background:#43a047;margin-right:5px;border-radius:2px;"></span>Prüfung
+              </span>
+              <!-- Hausaufgaben (Orange) -->
+              <span>
+                <span style="display:inline-block;width:12px;height:12px;background:#ff9800;margin-right:5px;border-radius:2px;"></span>Hausaufgaben
+              </span>
+            </div>
+
+            <!-- ============================================
+                 CALENDAR HEADER - Monat/Jahr Navigation
+                 ============================================ -->
+            <div class="calendar-header">
+              <!-- Vorheriger Monat Button -->
+              <button class="mdl-button" onclick="changeMonth(-1)">‹</button>
+              <!-- Monat und Jahr (z.B. "Januar 2025") - wird per JavaScript gefüllt -->
+              <h5 id="monthYear"></h5>
+              <!-- Nächster Monat Button -->
+              <button class="mdl-button" onclick="changeMonth(1)">›</button>
+            </div>
+
+            <!-- Wochentags-Zeile (Mo, Di, Mi, ...) - wird per JavaScript gefüllt -->
+            <div class="calendar-grid" id="calendar-days"></div>
+            
+            <!-- Datums-Grid (1-31) - wird per JavaScript gefüllt -->
+            <div class="calendar-grid" id="calendar-dates"></div>
+            
+            <!-- Countdown bis zum nächsten Event -->
+            <div id="countdown" class="countdown"></div>
+            
+            <!-- Erinnerung für Events diese Woche -->
+            <div id="reminder" style="margin-top: 10px; color: #388e3c;"></div>
+          </div>
+        </div>
+      </main>
+
+      <!-- ============================================
+           EVENT DIALOG - Popup zum Event hinzufügen/anzeigen
+           ============================================ -->
+      <dialog id="eventDialog">
+        <!-- Dialog-Header (blauer Bereich oben) -->
+        <div class="dialog-header">
+          <i class="material-icons">event</i>
+          <h4 id="dialogTitle">Neues Ereignis</h4>
+        </div>
+        
+        <!-- Formular für Events -->
+        <form method="dialog" id="eventForm">
+          <div class="dialog-body">
+            <!-- Liste vorhandener Events für diesen Tag - wird per JavaScript gefüllt -->
+            <div id="eventsList"></div>
+            
+            <!-- Eingabefeld für Event-Titel -->
+            <div class="form-group">
+              <label for="eventTitle">Titel</label>
+              <input type="text" id="eventTitle" placeholder="z.B. Mathe-Prüfung" />
+            </div>
+      
+            <!-- Dropdown für Event-Kategorie -->
+            <div class="form-group">
+              <label for="eventType">Kategorie</label>
+              <select id="eventType">
+                <option value="default">📋 Standard</option>
+                <option value="wichtig">⚠️ Wichtig</option>
+                <option value="pruefung">📝 Prüfung</option>
+                <option value="hausaufgaben">📚 Hausaufgaben</option>
+              </select>
+            </div>
+      
+            <!-- Checkbox für wöchentliche Wiederholung -->
+            <div class="checkbox-group">
+              <input type="checkbox" id="weeklyRepeat" />
+              <label for="weeklyRepeat">🔄 Wöchentlich wiederholen</label>
+            </div>
+      
+            <!-- Action-Buttons -->
+            <div class="dialog-actions">
+              <!-- Hinzufügen-Button (Grün) - fügt Event zur Liste hinzu -->
+              <button type="button" class="btn btn-primary" onclick="addEvent()">
+                <i class="material-icons" style="font-size: 18px;">add</i>
+                Hinzufügen
+              </button>
+              
+              <!-- Rechte Buttons (Abbrechen + Speichern) -->
+              <div class="action-right">
+                <!-- Abbrechen-Button - schließt Dialog ohne zu speichern -->
+                <button type="button" class="btn btn-secondary" onclick="closeDialog()">Abbrechen</button>
+                <!-- Speichern-Button - schließt Dialog und speichert -->
+                <button type="submit" class="btn btn-save">
+                  <i class="material-icons" style="font-size: 18px;">check</i>
+                  Speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- ============================================
+           DELETE DIALOG - Bestätigung für Löschen von wöchentlichen Events
+           ============================================ -->
+      <div id="deleteDialog" class="delete-dialog">
+        <div class="delete-dialog-content">
+          <!-- Titel mit Warnungs-Icon -->
+          <div class="delete-dialog-title">
+            <i class="material-icons warning-icon">warning</i> Wöchentliches Ereignis löschen
+          </div>
+          
+          <!-- Event-Name - wird per JavaScript gefüllt -->
+          <div class="delete-dialog-subtitle" id="deleteEventTitle"></div>
+          
+          <!-- Erklärungstext -->
+          <div class="delete-dialog-description">
+            Dieses Ereignis wiederholt sich wöchentlich. Möchten Sie nur dieses eine Ereignis löschen oder alle wiederholten Ereignisse?
+          </div>
+          
+          <!-- Buttons zur Auswahl -->
+          <div class="delete-dialog-buttons">
+            <!-- Abbrechen-Button -->
+            <button class="delete-dialog-button cancel" onclick="closeDeleteDialog()">Abbrechen</button>
+            <!-- Nur dieses Event löschen -->
+            <button class="delete-dialog-button delete-single" onclick="confirmDeleteSingle()">Nur dieses löschen</button>
+            <!-- Alle wiederholten Events löschen -->
+            <button class="delete-dialog-button delete-all" onclick="confirmDeleteAll()">Alle löschen</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // ============================================
+      // KALENDER JAVASCRIPT - Hauptfunktionalität
+      // ============================================
+      
+      // IIFE (Immediately Invoked Function Expression)
+      // Verhindert globale Variablen und kapselt den Code
+      (function() {
+        
+        // ============================================
+        // KONSTANTEN - Werden nicht verändert
+        // ============================================
+        
+        // Wochentags-Abkürzungen (0=Sonntag, 1=Montag, ...)
+        const days = ["So","Mo","Di","Mi","Do","Fr","Sa"];
+        
+        // Monatsnamen auf Deutsch
+        const monthNames = ["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+        
+        // Farben für Event-Typen
+        const eventColors = { 
+          default: "#7986cb",      // Blau
+          wichtig: "#e53935",      // Rot
+          pruefung: "#43a047",     // Grün
+          hausaufgaben: "#ff9800"  // Orange
+        };
+        
+        // ============================================
+        // VARIABLEN - Zustand der Anwendung
+        // ============================================
+        
+        // Aktuelles Datum im Kalender (beim Vor/Zurück wird das geändert)
+        let currentDate = new Date();
+        
+        // Aktuell ausgewähltes Datum (Format: "2025-01-24")
+        let selectedDateKey = "";
+        
+        // Events für das aktuell ausgewählte Datum
+        let eventsForSelectedDate = [];
+        
+        // Zu löschendes Event (für Delete-Dialog)
+        let eventToDelete = null;
+        let eventIndexToDelete = null;
+
+        // ============================================
+        // HILFSFUNKTIONEN - Datum formatieren
+        // ============================================
+        
+        // Fügt führende Null hinzu: 5 → "05"
+        const pad2 = n => String(n).padStart(2, "0");
+        
+        // Wandelt Date-Objekt in String um: Date(2025,0,24) → "2025-01-24"
+        const formatDateKey = d => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+        
+        // Wandelt Date-Key in lesbares Format: "2025-01-24" → "24.01.2025"
+        const formatKeyToDisplay = key => { 
+          const [y,m,d] = key.split("-").map(Number); 
+          return `${pad2(d)}.${pad2(m)}.${y}`; 
+        };
+
+        // ============================================
+        // DIALOG ÖFFNEN - Zeigt Event-Dialog an
+        // ============================================
+        
+        function openDialog(dateKey) {
+          // Speichere das ausgewählte Datum
+          selectedDateKey = dateKey;
+          
+          // Lade Events aus localStorage für dieses Datum
+          // localStorage.getItem gibt null zurück wenn kein Wert vorhanden
+          // Deshalb: || "[]" als Fallback für leeres Array
+          eventsForSelectedDate = JSON.parse(localStorage.getItem(dateKey) || "[]");
+          
+          // Setze Dialog-Titel (z.B. "Ereignisse für 24.01.2025")
+          const t = document.getElementById("dialogTitle");
+          if (t) t.textContent = `Ereignisse für ${formatKeyToDisplay(dateKey)}`;
+          
+          // Hole Formularfelder
+          const title = document.getElementById("eventTitle");
+          const type = document.getElementById("eventType");
+          const weekly = document.getElementById("weeklyRepeat");
+          
+          if (eventsForSelectedDate.length === 0) {
+            // Keine Events vorhanden → Felder leeren
+            if (title) title.value = "";
+            if (type) type.value = "default";
+            if (weekly) weekly.checked = false;
+          } else {
+            // Events vorhanden → Letztes Event als Vorlage nehmen
+            const last = eventsForSelectedDate[eventsForSelectedDate.length - 1];
+            if (title) title.value = last.title || "";
+            if (type) type.value = last.type || "default";
+            if (weekly) weekly.checked = !!last.repeat; // !! wandelt in Boolean um
+          }
+          
+          // Events-Liste im Dialog anzeigen
+          renderEventsList();
+          
+          // Dialog öffnen (HTML5 Dialog API)
+          const dlg = document.getElementById("eventDialog");
+          if (dlg?.showModal) dlg.showModal(); // ?. = Optional Chaining
+        }
+
+        // ============================================
+        // EVENTS-LISTE RENDERN - Zeigt vorhandene Events an
+        // ============================================
+        
+        function renderEventsList() {
+          const list = document.getElementById("eventsList");
+          if (!list) return; // Abbrechen wenn Element nicht existiert
+          
+          // Liste leeren
+          list.innerHTML = "";
+          
+          // Für jedes Event einen Eintrag erstellen
+          eventsForSelectedDate.forEach((ev, idx) => {
+            // Container für Event-Zeile
+            const row = document.createElement("div");
+            row.style.display = "flex";
+            row.style.justifyContent = "space-between";
+            row.style.alignItems = "center";
+
+            // Linker Bereich (Punkt + Text)
+            const left = document.createElement("div");
+            left.style.display = "flex";
+            left.style.alignItems = "center";
+            left.style.gap = "8px";
+
+            // Farbiger Punkt (zeigt Event-Typ)
+            const dot = document.createElement("span");
+            dot.className = "event-dot";
+            dot.style.width = "12px";
+            dot.style.height = "12px";
+            dot.style.backgroundColor = eventColors[ev.type] || eventColors.default;
+            left.appendChild(dot);
+
+            // Event-Titel (+ "wöchentlich" falls repeat=true)
+            const span = document.createElement("span");
+            span.textContent = ev.title + (ev.repeat ? " (wöchentlich)" : "");
+            left.appendChild(span);
+
+            // Löschen-Button
+            const delBtn = document.createElement("button");
+            delBtn.textContent = "🗑️";
+            delBtn.title = "Ereignis löschen";
+            delBtn.onclick = () => {
+              if (ev.repeat) {
+                // Wöchentliches Event → Bestätigungs-Dialog zeigen
+                showDeleteDialog(ev, idx);
+              } else {
+                // Einmaliges Event → Direkt löschen
+                eventsForSelectedDate.splice(idx, 1); // Entfernt Element an Index idx
+                localStorage.setItem(selectedDateKey, JSON.stringify(eventsForSelectedDate));
+                renderEventsList(); // Liste neu rendern
+                renderCalendar(); // Kalender neu rendern
+              }
+            };
+
+            // Zeile zusammenbauen
+            row.appendChild(left);
+            row.appendChild(delBtn);
+            list.appendChild(row);
+          });
+        }
+
+        // ============================================
+        // DELETE DIALOG - Bestätigungs-Dialog zeigen/schließen
+        // ============================================
+        
+        // Zeigt Bestätigungs-Dialog für wöchentliche Events
+        function showDeleteDialog(ev, idx) {
+          eventToDelete = ev; // Speichere Event zum Löschen
+          eventIndexToDelete = idx; // Speichere Index
+          
+          // Event-Name im Dialog anzeigen
+          const title = document.getElementById("deleteEventTitle");
+          if (title) title.textContent = `${ev.title}`;
+          
+          // Dialog anzeigen (CSS: .show { display: flex; })
+          const d = document.getElementById("deleteDialog");
+          if (d) d.classList.add("show");
+        }
+        
+        // Schließt den Delete-Dialog
+        function closeDeleteDialog() {
+          document.getElementById("deleteDialog")?.classList.remove("show");
+          eventToDelete = null; // Zurücksetzen
+          eventIndexToDelete = null;
+        }
+        
+        // Löscht nur das eine ausgewählte Event
+        function confirmDeleteSingle() {
+          if (eventToDelete && eventIndexToDelete !== null) {
+            // Event aus Array entfernen
+            eventsForSelectedDate.splice(eventIndexToDelete, 1);
+            // In localStorage speichern
+            localStorage.setItem(selectedDateKey, JSON.stringify(eventsForSelectedDate));
+            // UI aktualisieren
+            renderEventsList();
+            renderCalendar();
+          }
+          closeDeleteDialog();
+        }
+        
+        // Löscht alle wiederholten Events
+        function confirmDeleteAll() {
+          if (eventToDelete) deleteAllRepeatedEvents(eventToDelete);
+          closeDeleteDialog();
+        }
+        
+        // Hilfsfunktion: Löscht alle Wiederholungen eines Events
+        function deleteAllRepeatedEvents(evToDel) {
+          // Ausgewähltes Datum zerlegen
+          const [y,m,d] = selectedDateKey.split("-").map(Number);
+          const base = new Date(y, m - 1, d);
+          
+          // 12 Wochen vor und zurück durchgehen (insgesamt 25 Wochen)
+          for (let i = -12; i <= 12; i++) {
+            const dt = new Date(base);
+            dt.setDate(dt.getDate() + i * 7); // +/- i Wochen (7 Tage)
+            const key = formatDateKey(dt);
+            
+            // Events für dieses Datum laden
+            const arr = JSON.parse(localStorage.getItem(key) || "[]");
+            
+            // Events filtern (passendes Event entfernen)
+            // Vergleicht Titel UND repeat-Status
+              const filtered = arr.filter(e => !(e.title === evToDel.title && !!e.repeat === !!evToDel.repeat));
+              
+            // Speichern wenn noch Events übrig, sonst komplett löschen
+            if (filtered.length) localStorage.setItem(key, JSON.stringify(filtered));
+            else localStorage.removeItem(key);
+          }
+          
+          // Auch aus aktueller Liste entfernen
+          eventsForSelectedDate = eventsForSelectedDate.filter(e => !(e.title === evToDel.title && !!e.repeat === !!evToDel.repeat));
+          localStorage.setItem(selectedDateKey, JSON.stringify(eventsForSelectedDate));
+          renderEventsList();
+          renderCalendar();
+        }
+
+        // ============================================
+        // EVENT HINZUFÜGEN - Speichert neues Event
+        // ============================================
+        
+        function addEvent() {
+          // Formularwerte auslesen
+          const titleEl = document.getElementById("eventTitle");
+          const typeEl = document.getElementById("eventType");
+          const weeklyEl = document.getElementById("weeklyRepeat");
+          
+          const title = (titleEl?.value || "").trim(); // .trim() entfernt Leerzeichen
+          if (!title) { 
+            alert("Bitte gib einen Titel ein."); 
+            return; // Funktion beenden
+          }
+          
+          const type = typeEl?.value || "default";
+          const repeat = !!weeklyEl?.checked; // !! wandelt in Boolean um
+
+          // Prüfen ob Event schon existiert (gleicher Titel, Typ, repeat-Status)
+          if (eventsForSelectedDate.some(e => e.title === title && e.type === type && !!e.repeat === repeat)) {
+            alert("Dieses Ereignis wurde schon hinzugefügt.");
+            return;
+          }
+
+          // Neues Event erstellen
+          const newEv = { title, type, repeat };
+          eventsForSelectedDate.push(newEv); // An Array anhängen
+          localStorage.setItem(selectedDateKey, JSON.stringify(eventsForSelectedDate));
+
+          // Falls wöchentlich wiederholen → Auch für die nächsten 12 Wochen speichern
+          if (repeat) {
+            const [y,m,d] = selectedDateKey.split("-").map(Number);
+            const base = new Date(y, m - 1, d);
+            
+            // Die nächsten 12 Wochen
+            for (let i = 1; i <= 12; i++) {
+              const dt = new Date(base);
+              dt.setDate(dt.getDate() + i * 7); // +i Wochen (7 Tage)
+              const key = formatDateKey(dt);
+              const arr = JSON.parse(localStorage.getItem(key) || "[]");
+              
+              // Event hinzufügen falls noch nicht vorhanden
+              if (!arr.some(e => e.title === title && e.type === type && !!e.repeat)) {
+                arr.push({ title, type, repeat: true });
+                localStorage.setItem(key, JSON.stringify(arr));
+              }
+            }
+          }
+
+          // UI aktualisieren
+          renderEventsList();
+          renderCalendar();
+        }
+
+        // ============================================
+        // FORMULAR SUBMIT - Dialog schließen
+        // ============================================
+        
+        // Event-Listener für Formular-Submit (Enter-Taste oder Speichern-Button)
+        document.getElementById("eventForm")?.addEventListener("submit", (e) => {
+          e.preventDefault(); // Verhindert Seiten-Reload
+          document.getElementById("eventDialog")?.close(); // Dialog schließen
+          renderCalendar(); // Kalender neu rendern
+        });
+
+        // ============================================
+        // DELETE DIALOG - Klick außerhalb schließt Dialog
+        // ============================================
+        
+        window.addEventListener("click", (e) => {
+          const d = document.getElementById("deleteDialog");
+          // Wenn auf das Overlay geklickt wird (nicht auf den Content)
+          if (d && e.target === d) closeDeleteDialog();
+        });
+
+        // ============================================
+        // GLOBALE FUNKTIONEN - Für HTML onclick-Attribute
+        // ============================================
+        
+        // Diese Funktionen müssen global sein, damit sie in HTML onclick="" funktionieren
+        function closeDialog() { 
+          document.getElementById("eventDialog")?.close(); 
+        }
+        window.closeDialog = closeDialog; // Global verfügbar machen
+        
+        function changeMonth(delta) { 
+          // delta = -1 für vorherigen Monat, +1 für nächsten Monat
+          currentDate.setMonth(currentDate.getMonth() + delta); 
+          renderCalendar(); // Kalender neu rendern
+        }
+        window.changeMonth = changeMonth;
+        
+        // Weitere Funktionen global verfügbar machen
+        window.openDialog = openDialog;
+        window.addEvent = addEvent;
+        window.closeDeleteDialog = closeDeleteDialog;
+        window.confirmDeleteSingle = confirmDeleteSingle;
+        window.confirmDeleteAll = confirmDeleteAll;
+
+        // ============================================
+        // KALENDER RENDERN - Hauptfunktion
+        // ============================================
+        
+        function renderCalendar() {
+          const year = currentDate.getFullYear(); // z.B. 2025
+          const month = currentDate.getMonth(); // 0-11 (0=Januar)
+          
+          // Monat/Jahr-Anzeige aktualisieren (z.B. "Januar 2025")
+          const head = document.getElementById("monthYear");
+          if (head) head.textContent = `${monthNames[month]} ${year}`;
+
+          // ============================================
+          // WOCHENTAGS-ZEILE (Mo, Di, Mi, ...)
+          // ============================================
+          
+          const daysCont = document.getElementById("calendar-days");
+          if (daysCont) {
+            daysCont.innerHTML = ""; // Container leeren
+            
+            // Für jeden Wochentag eine Zelle erstellen
+            days.forEach(d => { 
+              const el = document.createElement("div"); 
+              el.className = "calendar-day"; 
+              el.textContent = d; 
+              daysCont.appendChild(el); 
+            });
+          }
+
+          // ============================================
+          // DATUMS-GRID (Zahlen 1-31)
+          // ============================================
+          
+          const datesCont = document.getElementById("calendar-dates");
+          if (!datesCont) return; // Abbrechen wenn Element nicht existiert
+          datesCont.innerHTML = ""; // Container leeren
+          
+          // Erster Tag des Monats (z.B. 1. Januar 2025)
+          const first = new Date(year, month, 1);
+          // Letzter Tag des Monats (z.B. 31. Januar 2025)
+          const last = new Date(year, month + 1, 0);
+          
+          // Wochentag des ersten Tages (0=Sonntag, 1=Montag, ...)
+          const start = first.getDay();
+
+          // Leere Zellen am Anfang (für vorherige Monatstage)
+          // Wenn der 1. auf Mittwoch fällt, brauchen wir 3 leere Zellen
+          for (let i = 0; i < start; i++) {
+            const empty = document.createElement("div");
+            empty.className = "calendar-date";
+            datesCont.appendChild(empty);
+          }
+
+          // Heutiges Datum als String (für Vergleich)
+          const todayKey = formatDateKey(new Date());
+          
+          // Für jeden Tag des Monats eine Zelle erstellen
+          for (let day = 1; day <= last.getDate(); day++) {
+            const date = new Date(year, month, day);
+            const key = formatDateKey(date); // z.B. "2025-01-24"
+            
+            // Datums-Zelle erstellen
+            const cell = document.createElement("div");
+            cell.className = "calendar-date";
+            
+            // Heutiges Datum hervorheben
+            if (key === todayKey) cell.classList.add("today");
+
+            // Datums-Nummer anzeigen
+            const num = document.createElement("div");
+            num.className = "calendar-date-number";
+            num.textContent = day;
+            cell.appendChild(num);
+
+            // Events für diesen Tag aus localStorage laden
+            const evs = JSON.parse(localStorage.getItem(key) || "[]");
+            
+            if (evs.length > 0) {
+              // Container für Event-Dots
+              const indicators = document.createElement("div");
+              indicators.className = "event-indicators";
+              
+              const maxDots = 5; // Maximal 5 Punkte anzeigen
+              
+              // Für jedes Event einen Punkt erstellen (maximal 5)
+              evs.slice(0, maxDots).forEach(ev => {
+                const dot = document.createElement("span");
+                dot.className = "event-dot";
+                dot.style.backgroundColor = eventColors[ev.type] || eventColors.default;
+                dot.title = ev.title + (ev.repeat ? " (wöchentlich)" : ""); // Tooltip
+                indicators.appendChild(dot);
+              });
+              
+              // Falls mehr als 5 Events → "+" anzeigen
+              if (evs.length > maxDots) {
+                const plus = document.createElement("span");
+                plus.textContent = "+";
+                plus.style.fontSize = "10px";
+                plus.style.color = "#666";
+                plus.style.fontWeight = "bold";
+                plus.title = `${evs.length - maxDots} weitere Ereignisse`;
+                indicators.appendChild(plus);
+              }
+              
+              cell.appendChild(indicators);
+            }
+
+            // Click-Handler: Öffnet Dialog für diesen Tag
+            cell.addEventListener("click", () => openDialog(key));
+            
+            datesCont.appendChild(cell);
+          }
+
+          // Countdown/Reminder aktualisieren
+          updateCountdown();
+        }
+
+        // ============================================
+        // COUNTDOWN - Zeigt nächstes Event an
+        // ============================================
+        
+        function updateCountdown() {
+          const c = document.getElementById("countdown");
+          const r = document.getElementById("reminder");
+          const today = new Date();
+          
+          let nextDate = null; // Datum des nächsten Events
+          let nextEvents = []; // Events an diesem Tag
+          
+          // Nächste 365 Tage durchsuchen
+          for (let i = 0; i < 365; i++) {
+            const d = new Date(today);
+            d.setDate(d.getDate() + i); // +i Tage
+            const key = formatDateKey(d);
+            const evs = JSON.parse(localStorage.getItem(key) || "[]");
+            
+            // Sobald ein Event gefunden wird → abbrechen
+            if (!nextDate && evs.length > 0) { 
+              nextDate = d; 
+              nextEvents = evs; 
+              break; // for-Schleife beenden
+            }
+          }
+          
+          if (nextDate && nextEvents.length > 0) {
+            // Tage bis zum Event berechnen
+            const diff = Math.floor((nextDate.getTime() - today.getTime()) / (1000*60*60*24));
+            
+            // Event-Titel sammeln (kommasepariert)
+            const titles = nextEvents.map(e => e.title).join(", ");
+            
+            // Countdown-Text setzen
+            c.textContent = diff === 0 
+              ? `Heute: ${titles}` 
+              : diff === 1 
+                ? `Morgen: ${titles}` 
+                : `${titles} in ${diff} Tag(en)`;
+            
+            // Reminder nur wenn Event in den nächsten 7 Tagen
+            if (diff <= 7) {
+              // Prüfen ob Prüfungen dabei sind
+              const hasExams = nextEvents.some(e => e.type === "pruefung");
+              const examEvents = nextEvents.filter(e => e.type === "pruefung");
+              const otherEvents = nextEvents.filter(e => e.type !== "pruefung");
+              
+              // Verschiedene Texte je nach Event-Typ und Zeitpunkt
+              if (diff === 0) {
+                // HEUTE
+                if (hasExams && otherEvents.length > 0) 
+                  r.textContent = examEvents.length === 1 
+                    ? "Heute ist deine Prüfung und weitere Termine! Viel Erfolg!" 
+                    : "Heute sind deine Prüfungen und weitere Termine! Viel Erfolg!";
+                else if (hasExams) 
+                  r.textContent = examEvents.length === 1 
+                    ? "Heute ist deine Prüfung! Viel Erfolg!" 
+                    : "Heute sind deine Prüfungen! Viel Erfolg!";
+                else 
+                  r.textContent = nextEvents.length === 1 
+                    ? `Heute steht an: ${titles}` 
+                    : `Heute stehen an: ${titles}`;
+              } else if (diff === 1) {
+                // MORGEN
+                if (hasExams && otherEvents.length > 0) 
+                  r.textContent = examEvents.length === 1 
+                    ? "Morgen ist deine Prüfung und weitere Termine! Viel Erfolg!" 
+                    : "Morgen sind deine Prüfungen und weitere Termine! Viel Erfolg!";
+                else if (hasExams) 
+                  r.textContent = examEvents.length === 1 
+                    ? "Morgen ist deine Prüfung! Viel Erfolg!" 
+                    : "Morgen sind deine Prüfungen! Viel Erfolg!";
+                else 
+                  r.textContent = nextEvents.length === 1 
+                    ? `Morgen steht an: ${titles}` 
+                    : `Morgen stehen an: ${titles}`;
+              } else {
+                // DIESE WOCHE (2-7 Tage)
+                if (hasExams && otherEvents.length > 0) 
+                  r.textContent = examEvents.length === 1 
+                    ? "Diese Woche hast du eine Prüfung und weitere Termine! Viel Erfolg!" 
+                    : "Diese Woche hast du Prüfungen und weitere Termine! Viel Erfolg!";
+                else if (hasExams) { 
+                  const t = examEvents.map(e => e.title).join(", "); 
+                  r.textContent = examEvents.length === 1 
+                    ? `Diese Woche hast du eine Prüfung: ${t}! Viel Erfolg!` 
+                    : `Diese Woche hast du Prüfungen: ${t}! Viel Erfolg!`; 
+                }
+                else 
+                  r.textContent = nextEvents.length === 1 
+                    ? `Diese Woche steht an: ${titles}` 
+                    : `Diese Woche stehen an: ${titles}`;
+              }
+            } else { 
+              // Mehr als 7 Tage entfernt → kein Reminder
+              r.textContent = ""; 
+            }
+          } else {
+            // Keine Events gefunden → Felder leeren
+            if (c) c.textContent = ""; 
+            if (r) r.textContent = "";
+          }
+        }
+
+        // ============================================
+        // INITIALISIERUNG - Beim Laden der Seite
+        // ============================================
+        
+        // renderCalendar global verfügbar machen (für inline handlers)
+        window.renderCalendar = renderCalendar;
+
+        // Kalender beim Laden der Seite rendern
+        window.addEventListener("load", renderCalendar);
+        
+      })(); // Ende der IIFE - Funktion wird sofort ausgeführt
+    </script>
+
+    <!-- Auth-Protection Script (falls vorhanden) -->
+    <script src="auth-protect.js"></script>
+  </body>
+</html>
