@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EduFlow</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" href="/Eduflow/manifest.json">
 <meta name="theme-color" content="#0c3b99">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -358,7 +358,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+        navigator.serviceWorker.register('/Eduflow/service-worker.js')
           .then(reg => console.log('✓ Service Worker registriert'))
           .catch(err => console.log('✗ Fehler:', err));
       });
