@@ -1,370 +1,364 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de-CH">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EduFlow</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0b1220">
+  <meta name="description" content="EduFlow – dein persönlicher Lern- und Organisationsbereich.">
+  <title>EduFlow | Home</title>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0c3b99">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="EduFlow">  
-<link rel="icon" type="image/png" href="/Eduflow/icon-192x192.png">
-
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="icon-192x192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    /* Google Fonts - Poppins */
-    @import url('https://fonts.googleapis.com/css2?family=Miniver&family=Poppins:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: "Poppins", sans-serif;
-    }
-
     :root {
-      --white-color: #FFFFFF;
-      --dark-color: #000000;
-      --primary-color: #106cc2;
-      --secondary-color: #1153cf;
-      --background-color: #0c3b99;
-      --nav-height: 60px;
-
-      /* Font size */
-      --font-size-s: 0.9rem;
-      --font-size-n: 1rem;
-      --font-size-m: 1.12rem;
-      --font-size-l: 1.5rem;
-      --font-size-xl: 2rem;
-      --font-size-xxl: 2.3rem;
-
-      /* Font weight */
-      --font-weight-normal: 400;
-      --font-weight-medium: 500;
-      --font-weight-semibold: 600;
-      --font-weight-bold: 700;
-
-      /* Border radius */
-      --border-radius-s: 8px;
-      --border-radius-m: 30px;
-      --border-radius-circle: 50%;
-
-      /* Site max width */
-      --site-max-width: 1300px;
+      color-scheme: dark;
+      --blue: #3b82f6;
+      --blue-hover: #2563eb;
+      --bg: #0b1220;
+      --sidebar: #0f192b;
+      --surface: #121f33;
+      --surface-hover: #192a43;
+      --surface-soft: #17263b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --border: #24344b;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --danger: #fb7185;
+      --shadow: 0 12px 30px rgba(0,0,0,.12);
     }
-
-    /* Stylings for whole site */
-    ul {
-      list-style: none;
+    [data-theme="light"] {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --sidebar: #ffffff;
+      --surface: #ffffff;
+      --surface-hover: #f1f6ff;
+      --surface-soft: #edf3fc;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 10px 28px rgba(15,23,42,.06);
     }
-
-    a {
-      text-decoration: none;
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+    button, a { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+    button { color: inherit; }
+    .app { min-height: 100vh; }
+    .sidebar {
+      width: 252px; position: fixed; inset: 0 auto 0 0; z-index: 20;
+      display: flex; flex-direction: column; padding: 27px 18px;
+      background: var(--sidebar); border-right: 1px solid var(--border);
     }
-
-    button {
-      cursor: pointer;
-      border: none;
-      background: none;
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 34px; font-weight: 800; font-size: 20px; letter-spacing: -.6px; }
+    .brand-mark { width: 35px; height: 35px; display: grid; place-items: center; border-radius: 11px; background: var(--blue); color: white; font-size: 19px; }
+    .nav-label { padding: 0 12px 10px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .nav { display: grid; gap: 5px; }
+    .nav a { display: flex; align-items: center; gap: 13px; padding: 11px 12px; color: var(--muted); border-radius: 10px; font-size: 13px; font-weight: 600; transition: .18s ease; }
+    .nav a:hover { color: var(--text); background: var(--surface-hover); }
+    .nav a.active { color: #fff; background: var(--blue); box-shadow: 0 5px 14px rgba(59,130,246,.22); }
+    .nav-icon { width: 19px; text-align: center; font-size: 16px; }
+    .sidebar-bottom { margin-top: auto; display: grid; gap: 8px; }
+    .theme-toggle { display: flex; width: 100%; align-items: center; gap: 12px; padding: 11px 12px; color: var(--muted); border: 1px solid var(--border); border-radius: 10px; background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; }
+    .theme-toggle:hover { background: var(--surface-hover); color: var(--text); }
+    .sidebar-note { padding: 13px 12px 2px; color: var(--muted); font-size: 11px; line-height: 1.6; }
+    .main { margin-left: 252px; min-height: 100vh; }
+    .topbar { height: 76px; display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 0 42px; border-bottom: 1px solid var(--border); }
+    .topbar-date { margin-right: auto; color: var(--muted); font-size: 12px; }
+    .icon-button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 11px; background: var(--surface); cursor: pointer; }
+    .avatar { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: var(--surface-soft); color: var(--blue); font-weight: 800; font-size: 13px; }
+    .content { width: min(1160px, 100%); margin: 0 auto; padding: 42px 42px 55px; }
+    .welcome { margin-bottom: 27px; }
+    .eyebrow { margin: 0 0 9px; color: var(--blue); font-size: 11px; font-weight: 700; letter-spacing: 1.1px; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(25px, 3vw, 32px); letter-spacing: -1.1px; line-height: 1.2; }
+    .welcome p { margin: 9px 0 0; color: var(--muted); font-size: 13px; }
+    .stats { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin-bottom: 22px; }
+    .stat-card, .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 15px; box-shadow: var(--shadow); }
+    .stat-card { padding: 18px 20px; display: flex; align-items: center; gap: 15px; }
+    .stat-icon { width: 43px; height: 43px; display: grid; place-items: center; border-radius: 12px; background: rgba(59,130,246,.13); color: var(--blue); font-size: 19px; }
+    .stat-label { color: var(--muted); font-size: 11px; font-weight: 600; }
+    .stat-number { margin-top: 4px; font-size: 25px; font-weight: 800; letter-spacing: -.8px; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(280px,.85fr); gap: 18px; align-items: start; }
+    .left-column, .right-column { display: grid; gap: 18px; }
+    .panel { padding: 20px; }
+    .panel-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+    h2 { margin: 0; font-size: 14px; letter-spacing: -.2px; }
+    .subtle-link { color: var(--blue); font-size: 11px; font-weight: 700; white-space: nowrap; }
+    .subtle-link:hover { text-decoration: underline; }
+    .item-list { display: grid; gap: 9px; }
+    .task-item, .event-item { display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 10px; background: var(--surface-soft); }
+    .task-dot { width: 17px; height: 17px; flex: 0 0 17px; border: 1.5px solid var(--muted); border-radius: 50%; }
+    .task-main, .event-main { min-width: 0; flex: 1; }
+    .task-title, .event-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
+    .task-meta, .event-meta { margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .due-tag { padding: 5px 7px; border-radius: 7px; background: rgba(251,191,36,.12); color: var(--warning); font-size: 9px; font-weight: 700; white-space: nowrap; }
+    .due-tag.overdue { background: rgba(251,113,133,.12); color: var(--danger); }
+    .event-date { width: 39px; flex: 0 0 39px; text-align: center; padding: 6px 3px; border-radius: 8px; background: var(--surface); }
+    .event-day { font-size: 16px; font-weight: 800; }
+    .event-month { margin-top: 2px; color: var(--muted); font-size: 9px; text-transform: uppercase; }
+    .event-type { color: var(--blue); font-size: 9px; font-weight: 700; }
+    .empty-state { padding: 17px 12px; border: 1px dashed var(--border); border-radius: 10px; color: var(--muted); text-align: center; font-size: 11px; line-height: 1.6; }
+    .empty-state strong { display: block; margin-bottom: 4px; color: var(--text); font-size: 12px; }
+    .quick-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+    .quick-card { min-height: 95px; display: flex; flex-direction: column; justify-content: space-between; padding: 13px; border: 1px solid var(--border); border-radius: 11px; background: var(--surface-soft); transition: .18s ease; }
+    .quick-card:hover { transform: translateY(-2px); border-color: var(--blue); background: var(--surface-hover); }
+    .quick-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: rgba(59,130,246,.13); color: var(--blue); font-size: 15px; }
+    .quick-title { font-size: 11px; font-weight: 700; }
+    .quick-desc { margin-top: 3px; color: var(--muted); font-size: 9px; }
+    .mobile-brand, .mobile-nav { display: none; }
+    @media (max-width: 980px) {
+      .sidebar { width: 220px; }
+      .main { margin-left: 220px; }
+      .content { padding: 32px 25px 45px; }
+      .topbar { padding: 0 25px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .right-column { grid-template-columns: repeat(2,minmax(0,1fr)); align-items: start; }
     }
-
-    /* Navbar stylings */
-    header {
-      position: fixed;
-      width: 100%;
-      z-index: 5;
-      background: var(--background-color);
+    @media (max-width: 680px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding-bottom: 72px; }
+      .topbar { height: 60px; padding: 0 18px; }
+      .mobile-brand { display: flex; align-items: center; gap: 9px; margin-right: auto; font-weight: 800; font-size: 16px; }
+      .mobile-brand .brand-mark { width: 30px; height: 30px; font-size: 16px; }
+      .topbar-date { display: none; }
+      .content { padding: 29px 17px 35px; }
+      .stats { gap: 10px; }
+      .stat-card { padding: 14px 12px; gap: 10px; }
+      .stat-icon { width: 36px; height: 36px; font-size: 16px; }
+      .stat-number { font-size: 22px; }
+      .right-column { grid-template-columns: 1fr; }
+      .mobile-nav { position: fixed; inset: auto 0 0; z-index: 30; display: flex; justify-content: space-around; gap: 3px; padding: 8px 5px calc(8px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--sidebar); }
+      .mobile-nav a { min-width: 0; display: grid; justify-items: center; gap: 4px; padding: 5px 8px; color: var(--muted); font-size: 9px; font-weight: 600; }
+      .mobile-nav a.active { color: var(--blue); }
+      .mobile-nav .nav-icon { font-size: 17px; }
     }
-
-    header .navbar {
-      display: flex;
-      align-items: center;
-      padding: 20px;
-      justify-content: space-between;
-    }
-
-    .section-content {
-      max-width: var(--site-max-width);
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    .navbar .nav-menu {
-      display: flex;
-      gap: 20px;
-      align-items: center;
-    }
-
-    .navbar .nav-menu .nav-item .nav-link {
-      display: flex;
-      gap: 10px;
-      padding: 10px 18px;
-      color: var(--white-color);
-      background: var(--secondary-color);
-      font-size: var(--font-size-m);
-      border-radius: var(--border-radius-m);
-      transition: 0.3s ease;
-    }
-
-    .navbar .nav-menu .nav-item .nav-link:hover {
-      color: var(--primary-color);
-      background: var(--secondary-color);
-    }
-
-    .navbar .nav-logo .logo-text {
-      color: var(--white-color);
-      font-size: var(--font-size-xl);
-      font-weight: var(--font-weight-semibold);
-    }
-
-    /* Hide the hamburger by default */
-    .menu-toggle {
-      display: none;
-      font-size: 28px;
-      color: var(--white-color);
-      cursor: pointer;
-    }
-
-    /* Hero Section */
-    .hero-section {
-      background: var(--primary-color);
-      min-height: 100vh;
-    }
-
-    .hero-section .section-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      min-height: 100vh;
-      color: var(--white-color);
-      padding-top: 80px;
-    }
-
-    .hero-section .hero-details .title {
-      font-size: var(--font-size-xxl);
-      color: var(--white-color);
-      font-family: Poppins, sans-serif;
-    }
-
-    .hero-section .hero-details .subtitle {
-      margin-top: 10px;
-      font-size: var(--font-size-l);
-      color: var(--white-color);
-    }
-
-    .hero-section .hero-details .description {
-      margin: 20px 0;
-      font-size: var(--font-size-m);
-      color: var(--white-color);
-    }
-
-    .hero-section .hero-details .buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 20px;
-    }
-
-    .hero-section .hero-details .buttons a {
-      display: block;
-      text-align: center;
-      padding: 12px 24px;
-      border: 2px solid transparent;
-      color: var(--white-color);
-      border-radius: var(--border-radius-m);
-      background: var(--secondary-color);
-      font-weight: var(--font-weight-medium);
-      font-size: var(--font-size-m);
-      transition: 0.3s ease;
-    }
-
-    .hero-section .hero-details .buttons a:hover {
-      background: rgb(21, 152, 196);
-      border: 2px solid var(--white-color);
-      color: var(--white-color);
-    }
-
-    .hero-section .hero-image-wrapper {
-      max-width: 500px;
-      margin-right: 30px;
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-left: 80px;
-    }
-
-    .hero-section .hero-image {
-      width: 200%;
-      max-width: 500px;
-      height: auto;
-    }
-
-    /* Responsive (mobile) */
-    @media (max-width: 768px) {
-      .navbar .nav-menu {
-        position: absolute;
-        top: var(--nav-height);
-        right: 0;
-        flex-direction: column;
-        background: var(--background-color);
-        width: 200px;
-        padding: 20px;
-        gap: 15px;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-      }
-
-      .navbar .nav-menu.active {
-        transform: translateX(0);
-      }
-
-      .menu-toggle {
-        display: block;
-      }
-    }
-
-    @media (max-width: 500px) {
-      header .navbar {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 12px 8px;
-      }
-
-      .navbar .nav-logo .logo-text {
-        font-size: 1.3rem;
-      }
-
-      .menu-toggle {
-        font-size: 32px;
-        margin-left: 6px;
-      }
-
-      .navbar .nav-menu {
-        width: 100vw;
-        right: 0;
-        padding: 16px 8px;
-      }
-
-      .navbar .nav-menu .nav-item .nav-link {
-        font-size: 1rem;
-        padding: 10px 10px;
-      }
-
-      .hero-section .section-content {
-        flex-direction: column;
-        min-height: auto;
-        padding: 0;
-      }
-
-      .hero-section .hero-details {
-        width: 100%;
-        margin: 0;
-        padding: 0 8px;
-        text-align: center;
-      }
-
-      .hero-section .title {
-        font-size: 1.5rem;
-      }
-
-      .hero-section .subtitle {
-        font-size: 1.1rem;
-      }
-
-      .hero-section .hero-details .buttons a {
-        font-size: 1rem;
-        padding: 10px 0;
-        margin: 0;
-      }
-
-      .hero-section .hero-image-wrapper {
-        margin: 20px 0 0 0;
-        max-width: 90vw;
-        margin-left: 0;
-      }
-
-      .hero-section .hero-image {
-        width: 100%;
-        max-width: 320px;
-        height: auto;
-      }
+    @media (max-width: 380px) {
+      .stat-card { display: block; }
+      .stat-icon { margin-bottom: 8px; }
+      .quick-grid { gap: 7px; }
+      .panel { padding: 15px; }
     }
   </style>
 </head>
 <body>
-
-  <header>
-    <nav class="navbar section-content">
-      <a href="#" class="nav-logo">
-        <h2 class="logo-text">EduFlow</h2>
-      </a>
-      <button class="menu-toggle" id="menu-toggle">&#9776;</button>
+<div class="app">
+  <aside class="sidebar">
+    <a class="brand" href="index.html"><span class="brand-mark">E</span><span>EduFlow</span></a>
+    <div class="nav-label">Workspace</div>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a class="active" href="index.html"><span class="nav-icon">⌂</span>Home</a>
+      <a href="kalender.html"><span class="nav-icon">▦</span>Kalender</a>
+      <a href="todos.html"><span class="nav-icon">☷</span>Listen</a>
+      <a href="meine-notizen.html"><span class="nav-icon">▤</span>Notizen</a>
+      <a href="mindmaps.html"><span class="nav-icon">⌘</span>Mindmaps</a>
+      <a href="timer.html"><span class="nav-icon">◷</span>Timer</a>
+      <a href="tagebuch.html"><span class="nav-icon">▧</span>Tagebuch</a>
     </nav>
-  </header>
+    <div class="sidebar-bottom">
+      <button class="theme-toggle" id="themeToggle" type="button"><span id="themeIcon">☀</span><span id="themeLabel">Light Mode</span></button>
+      <div class="sidebar-note">Dein Plan. Dein Überblick. Dein Flow.</div>
+    </div>
+  </aside>
 
-  <main>
-    <section class="hero-section">
-      <div class="section-content">
-        <!-- Text -->
-        <div class="hero-details">
-          <h2 class="title">Dein Plan, dein Flow</h2>
-          <h3 class="subtitle">Mache Notizen, behalte den Überblick auf deine Prüfungen, lerne mit Karteikarten</h3>
-          <p class="description">Lass uns loslegen</p>
-          <div class="buttons">
-            <a href="#" class="button-Notizen" onclick="window.location.href='meine-notizen.html'">Notizen</a>
-            <a href="#" class="button-termine" onclick="window.location.href='pruefungen.html'">Termine</a>
-            <a href="#" class="button-Kalender" onclick="window.location.href='kalender.html'">Kalender</a>
-            <a href="#" class="button-Mindmaps" onclick="window.location.href='mindmaps.html'">Mindmaps</a>
-            <a href="#" class="button-Karteikarten" onclick="window.location.href='karteien.html'">Karteikarten</a>
-            <a href="#" class="button-ToDo-Liste" onclick="window.location.href='todos.html'">ToDo-Liste</a>
-            <a href="#" class="Tagebuch" onclick="window.location.href='tagebuch.html'">Tagebuch</a>
-            <a href="#" class="Rechner" onclick="window.location.href='timer.html'">Rechner</a>
-          </div>
+  <main class="main">
+    <header class="topbar">
+      <a class="mobile-brand" href="index.html"><span class="brand-mark">E</span>EduFlow</a>
+      <div class="topbar-date" id="topbarDate"></div>
+      <button class="icon-button" id="mobileThemeToggle" type="button" aria-label="Darstellung wechseln" title="Darstellung wechseln">☼</button>
+      <div class="avatar" aria-label="Profil">E</div>
+    </header>
+
+    <section class="content">
+      <div class="welcome">
+        <p class="eyebrow">Dein persönlicher Workspace</p>
+        <h1 id="greeting">Guten Tag!</h1>
+        <p id="welcomeDate">Hier ist dein Überblick für heute.</p>
+      </div>
+
+      <section class="stats" aria-label="Tagesübersicht">
+        <article class="stat-card">
+          <div class="stat-icon">✓</div>
+          <div><div class="stat-label">Heute & überfällig</div><div class="stat-number" id="taskCount">0</div></div>
+        </article>
+        <article class="stat-card">
+          <div class="stat-icon">▦</div>
+          <div><div class="stat-label">Termine heute</div><div class="stat-number" id="eventCount">0</div></div>
+        </article>
+      </section>
+
+      <div class="dashboard-grid">
+        <div class="left-column">
+          <section class="panel">
+            <div class="panel-heading"><h2>Meine Aufgaben</h2><a class="subtle-link" href="todos.html">Alle Listen ansehen →</a></div>
+            <div class="item-list" id="taskList"><div class="empty-state"><strong>Deine Aufgaben werden geladen …</strong></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><h2>Nächste Termine</h2><a class="subtle-link" href="kalender.html">Kalender öffnen →</a></div>
+            <div class="item-list" id="eventList"><div class="empty-state"><strong>Deine Termine werden geladen …</strong></div></div>
+          </section>
         </div>
 
-        <!-- Bild -->
-        <div class="hero-image-wrapper">
-          <img src="Startbild_Eduflow-2.png" class="hero-image" alt="Hero">
+        <div class="right-column">
+          <section class="panel">
+            <div class="panel-heading"><h2>Schnellzugriff</h2></div>
+            <div class="quick-grid">
+              <a class="quick-card" href="meine-notizen.html"><span class="quick-icon">＋</span><span><span class="quick-title">Neue Notiz</span><span class="quick-desc">Gedanken festhalten</span></span></a>
+              <a class="quick-card" href="todos.html"><span class="quick-icon">＋</span><span><span class="quick-title">Neue Aufgabe</span><span class="quick-desc">Aufgabenliste öffnen</span></span></a>
+              <a class="quick-card" href="kalender.html"><span class="quick-icon">＋</span><span><span class="quick-title">Neuer Termin</span><span class="quick-desc">Kalender öffnen</span></span></a>
+              <a class="quick-card" href="mindmaps.html"><span class="quick-icon">＋</span><span><span class="quick-title">Neue Mindmap</span><span class="quick-desc">Ideen strukturieren</span></span></a>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><h2>Dein Lernbereich</h2></div>
+            <div class="empty-state"><strong>Alles an einem Ort.</strong>Plane deine Aufgaben, halte Notizen fest und behalte deine Termine im Blick.</div>
+          </section>
         </div>
       </div>
     </section>
   </main>
 
+  <nav class="mobile-nav" aria-label="Mobile Navigation">
+    <a class="active" href="index.html"><span class="nav-icon">⌂</span>Home</a>
+    <a href="kalender.html"><span class="nav-icon">▦</span>Kalender</a>
+    <a href="todos.html"><span class="nav-icon">☷</span>Listen</a>
+    <a href="meine-notizen.html"><span class="nav-icon">▤</span>Notizen</a>
+    <a href="mindmaps.html"><span class="nav-icon">⌘</span>Mindmaps</a>
+  </nav>
+</div>
 
+<script>
+  const root = document.documentElement;
+  const themeKey = "eduflow-theme";
+  function applyTheme(theme) {
+    root.dataset.theme = theme;
+    const dark = theme === "dark";
+    document.getElementById("themeLabel").textContent = dark ? "Light Mode" : "Dark Mode";
+    document.getElementById("themeIcon").textContent = dark ? "☀" : "☾";
+    document.getElementById("mobileThemeToggle").textContent = dark ? "☀" : "☾";
+    document.querySelector('meta[name="theme-color"]').content = dark ? "#0b1220" : "#f4f7fb";
+  }
+  let savedTheme = localStorage.getItem(themeKey);
+  if (!savedTheme) savedTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  applyTheme(savedTheme);
+  function toggleTheme() {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    localStorage.setItem(themeKey, next);
+    applyTheme(next);
+  }
+  document.getElementById("themeToggle").addEventListener("click", toggleTheme);
+  document.getElementById("mobileThemeToggle").addEventListener("click", toggleTheme);
 
-  <script>
-    // Hamburger Menu Toggle
-    const menuToggle = document.getElementById('menu-toggle');
-    const navMenu = document.querySelector('.nav-menu');
+  const now = new Date();
+  const todayKey = dateKey(now);
+  const dateFormatter = new Intl.DateTimeFormat("de-CH", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const shortDateFormatter = new Intl.DateTimeFormat("de-CH", { day: "numeric", month: "short" });
+  document.getElementById("topbarDate").textContent = dateFormatter.format(now);
+  document.getElementById("welcomeDate").textContent = dateFormatter.format(now);
+  const hour = now.getHours();
+  document.getElementById("greeting").textContent = hour < 11 ? "Guten Morgen! 👋" : hour < 18 ? "Guten Tag! 👋" : "Guten Abend! 👋";
 
-    menuToggle.addEventListener('click', () => {
-      navMenu.classList.toggle('active');
+  function dateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + d;
+  }
+  function safeRead(key, fallback) {
+    try { const value = JSON.parse(localStorage.getItem(key)); return value ?? fallback; }
+    catch (error) { console.warn("EduFlow: Ungültige gespeicherte Daten für", key, error); return fallback; }
+  }
+  function makeEmpty(message, detail) {
+    const box = document.createElement("div");
+    box.className = "empty-state";
+    const strong = document.createElement("strong");
+    strong.textContent = message;
+    box.appendChild(strong);
+    if (detail) box.appendChild(document.createTextNode(detail));
+    return box;
+  }
+  function renderTasks() {
+    const names = safeRead("todoLists", []);
+    const dated = [];
+    let undatedOpen = 0;
+    if (Array.isArray(names)) {
+      names.forEach(name => {
+        const entries = safeRead("todos_" + name, []);
+        if (!Array.isArray(entries)) return;
+        entries.forEach(task => {
+          if (!task || task.completed) return;
+          const due = task.dueDate || task.due || task.date || null;
+          if (!due || !/^\d{4}-\d{2}-\d{2}$/.test(String(due))) { undatedOpen++; return; }
+          if (due <= todayKey) dated.push({ text: task.text || "Aufgabe", due, list: name });
+        });
+      });
+    }
+    dated.sort((a,b) => a.due.localeCompare(b.due));
+    document.getElementById("taskCount").textContent = dated.length;
+    const container = document.getElementById("taskList");
+    container.replaceChildren();
+    if (!dated.length) {
+      container.appendChild(makeEmpty("Alles im Griff?", undatedOpen ? undatedOpen + " offene Aufgabe(n) in deinen Listen haben noch kein Fälligkeitsdatum." : "Für heute sind keine offenen oder überfälligen Aufgaben eingetragen."));
+      return;
+    }
+    dated.slice(0,5).forEach(task => {
+      const row = document.createElement("div"); row.className = "task-item";
+      const dot = document.createElement("span"); dot.className = "task-dot";
+      const main = document.createElement("div"); main.className = "task-main";
+      const title = document.createElement("div"); title.className = "task-title"; title.textContent = task.text;
+      const meta = document.createElement("div"); meta.className = "task-meta"; meta.textContent = task.list;
+      main.append(title,meta);
+      const tag = document.createElement("span"); tag.className = "due-tag" + (task.due < todayKey ? " overdue" : "");
+      tag.textContent = task.due < todayKey ? "Überfällig" : "Heute";
+      row.append(dot,main,tag); container.appendChild(row);
     });
-
-    // Logout Funktion
-    function logout() {
-      firebase.auth().signOut().then(() => {
-        window.location.href = "login-page.html";
-      }).catch((error) => {
-        console.error("Fehler beim Logout:", error);
+    if (dated.length > 5) container.appendChild(makeEmpty("Weitere Aufgaben", "Du hast " + (dated.length - 5) + " weitere heutige oder überfällige Aufgaben."));
+  }
+  function renderEvents() {
+    const upcoming = [];
+    let todayCount = 0;
+    for (let offset = 0; offset < 8; offset++) {
+      const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+      const key = dateKey(date);
+      const entries = safeRead(key, []);
+      if (!Array.isArray(entries)) continue;
+      if (key === todayKey) todayCount = entries.length;
+      entries.forEach(event => {
+        if (event && event.title) upcoming.push({ ...event, date, key });
       });
     }
-  </script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/Eduflow/service-worker.js')
-          .then(reg => console.log('✓ Service Worker registriert'))
-          .catch(err => console.log('✗ Fehler:', err));
-      });
+    document.getElementById("eventCount").textContent = todayCount;
+    const container = document.getElementById("eventList");
+    container.replaceChildren();
+    if (!upcoming.length) {
+      container.appendChild(makeEmpty("Keine Termine geplant", "In den nächsten sieben Tagen stehen keine Termine in deinem Kalender."));
+      return;
     }
-  </script> 
-
+    upcoming.slice(0,4).forEach(event => {
+      const row = document.createElement("div"); row.className = "event-item";
+      const date = document.createElement("div"); date.className = "event-date";
+      const day = document.createElement("div"); day.className = "event-day"; day.textContent = event.date.getDate();
+      const month = document.createElement("div"); month.className = "event-month"; month.textContent = new Intl.DateTimeFormat("de-CH",{month:"short"}).format(event.date);
+      date.append(day,month);
+      const main = document.createElement("div"); main.className = "event-main";
+      const title = document.createElement("div"); title.className = "event-title"; title.textContent = event.title;
+      const meta = document.createElement("div"); meta.className = "event-meta"; meta.textContent = event.key === todayKey ? "Heute" : dateFormatter.format(event.date);
+      main.append(title,meta);
+      const type = document.createElement("span"); type.className = "event-type";
+      const labels = { default: "Termin", wichtig: "Wichtig", pruefung: "Prüfung", hausaufgaben: "Aufgabe" };
+      type.textContent = labels[event.type] || "Termin";
+      row.append(date,main,type); container.appendChild(row);
+    });
+  }
+  renderTasks();
+  renderEvents();
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("service-worker.js").catch(error => console.warn("Service Worker konnte nicht registriert werden:", error));
+    });
+  }
+</script>
 </body>
 </html>
